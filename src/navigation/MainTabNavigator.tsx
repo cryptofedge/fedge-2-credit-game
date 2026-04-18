@@ -8,13 +8,11 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, Text, StyleSheet } from 'react-native';
 import { COLORS, FONTS, RADIUS } from '@constants/theme';
 import HomeScreen from '@screens/main/HomeScreen';
+import SimulatorScreen from '@screens/main/SimulatorScreen';
 
 // Placeholder screens (to be built)
 const MissionsScreen = () => (
   <View style={ph.c}><Text style={ph.t}>Missions — Coming Soon</Text></View>
-);
-const SimulatorScreen = () => (
-  <View style={ph.c}><Text style={ph.t}>Credit Simulator — Coming Soon</Text></View>
 );
 const ProfileScreen = () => (
   <View style={ph.c}><Text style={ph.t}>Profile — Coming Soon</Text></View>
