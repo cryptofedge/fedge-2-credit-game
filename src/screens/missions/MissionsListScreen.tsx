@@ -56,7 +56,7 @@ const MISSIONS = [
     duration: '6 min',
     quizCount: 5,
     requiredMissions: ['mission_1_five_factors'],
-    screen: null, // Coming soon
+    screen: 'MissionTwo',
   },
   {
     id: 'mission_3_dispute',

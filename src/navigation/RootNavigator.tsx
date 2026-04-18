@@ -8,6 +8,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import OnboardingNavigator from './OnboardingNavigator';
 import MainAppNavigator from './MainAppNavigator';
+import LevelUpModal from '@components/LevelUpModal';
 import { useGameStore } from '@store/gameStore';
 
 export type RootStackParamList = {
@@ -33,6 +34,8 @@ export default function RootNavigator() {
           <Stack.Screen name="MainApp" component={MainAppNavigator} />
         )}
       </Stack.Navigator>
+      {/* Level-up modal overlays every screen globally */}
+      <LevelUpModal />
     </NavigationContainer>
   );
 }
