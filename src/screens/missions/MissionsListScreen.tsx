@@ -315,6 +315,31 @@ export default function MissionsListScreen({ navigation }: any) {
           })}
         </View>
 
+        {/* ── REAL LIFE SCENARIOS ────────────── */}
+        <TouchableOpacity
+          style={styles.scenarioCard}
+          onPress={() => navigation.navigate('Scenarios', { chapterId: 'mission_1_five_factors' })}
+          activeOpacity={0.85}
+        >
+          <View style={styles.scenarioLeft}>
+            <Text style={styles.scenarioEmoji}>🎭</Text>
+          </View>
+          <View style={styles.scenarioInfo}>
+            <Text style={styles.scenarioLabel}>SIMULATION MODE</Text>
+            <Text style={styles.scenarioTitle}>Real Life Scenarios</Text>
+            <Text style={styles.scenarioDesc}>
+              Missed payments, maxed cards, closing old accounts — live through real credit decisions and see the score impact instantly.
+            </Text>
+            <View style={styles.scenarioPills}>
+              <View style={styles.scenarioPill}><Text style={styles.scenarioPillText}>6 Scenarios</Text></View>
+              <View style={[styles.scenarioPill, { backgroundColor: COLORS.accent + '20', borderColor: COLORS.accent + '40' }]}>
+                <Text style={[styles.scenarioPillText, { color: COLORS.accent }]}>+750 XP</Text>
+              </View>
+            </View>
+          </View>
+          <Text style={[styles.chevron, { color: COLORS.accent }]}>→</Text>
+        </TouchableOpacity>
+
         {/* ── COMING SOON TEASER ─────────────── */}
         <View style={styles.comingSoon}>
           <Text style={styles.comingSoonEmoji}>🚀</Text>
@@ -487,6 +512,45 @@ const styles = StyleSheet.create({
     flexShrink: 0,
     paddingRight: SPACING.xs,
   },
+
+  // Scenario card
+  scenarioCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: SPACING.lg,
+    marginBottom: SPACING.md,
+    backgroundColor: COLORS.bgCard,
+    borderRadius: RADIUS.xl,
+    padding: SPACING.md,
+    borderWidth: 1.5,
+    borderColor: COLORS.accent + '50',
+    gap: SPACING.md,
+    shadowColor: COLORS.accent,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  scenarioLeft: {
+    width: 56, height: 56,
+    borderRadius: RADIUS.lg,
+    backgroundColor: COLORS.accent + '20',
+    alignItems: 'center', justifyContent: 'center',
+    flexShrink: 0,
+  },
+  scenarioEmoji: { fontSize: 28 },
+  scenarioInfo: { flex: 1, gap: 3 },
+  scenarioLabel: { fontSize: FONTS.sizes.xs, color: COLORS.accent, fontWeight: '800', letterSpacing: 1 },
+  scenarioTitle: { fontSize: FONTS.sizes.lg, fontWeight: '900', color: COLORS.textPrimary },
+  scenarioDesc: { fontSize: FONTS.sizes.xs, color: COLORS.textMuted, lineHeight: 17, marginTop: 2, marginBottom: SPACING.xs },
+  scenarioPills: { flexDirection: 'row', gap: SPACING.xs },
+  scenarioPill: {
+    backgroundColor: COLORS.bgCardAlt,
+    borderRadius: RADIUS.pill,
+    paddingHorizontal: SPACING.sm, paddingVertical: 2,
+    borderWidth: 1, borderColor: COLORS.border,
+  },
+  scenarioPillText: { fontSize: 10, fontWeight: '700', color: COLORS.textMuted },
 
   // Coming soon
   comingSoon: {
