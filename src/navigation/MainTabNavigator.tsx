@@ -9,11 +9,9 @@ import { View, Text, StyleSheet } from 'react-native';
 import { COLORS, FONTS, RADIUS } from '@constants/theme';
 import HomeScreen from '@screens/main/HomeScreen';
 import SimulatorScreen from '@screens/main/SimulatorScreen';
+import MissionsNavigator from './MissionsNavigator';
 
 // Placeholder screens (to be built)
-const MissionsScreen = () => (
-  <View style={ph.c}><Text style={ph.t}>Missions — Coming Soon</Text></View>
-);
 const ProfileScreen = () => (
   <View style={ph.c}><Text style={ph.t}>Profile — Coming Soon</Text></View>
 );
@@ -83,7 +81,7 @@ export default function MainTabNavigator() {
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Missions" component={MissionsScreen} />
+      <Tab.Screen name="Missions" component={MissionsNavigator} />
       <Tab.Screen name="Simulator" component={SimulatorScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>

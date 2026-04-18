@@ -378,6 +378,10 @@ export default function HomeScreen({ navigation }: any) {
                 key={action.id}
                 style={[styles.actionCard, { borderColor: action.color + '40' }]}
                 activeOpacity={0.8}
+                onPress={() => {
+                  if (action.screen === 'Simulator') navigation?.navigate('Simulator');
+                  else if (action.screen === 'Missions') navigation?.navigate('Missions');
+                }}
               >
                 <View style={[styles.actionIconBox, { backgroundColor: action.color + '18' }]}>
                   <Text style={styles.actionIcon}>{action.icon}</Text>
