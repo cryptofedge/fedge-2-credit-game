@@ -12,10 +12,13 @@ import {
   Animated,
   Dimensions,
   StatusBar,
+  Image,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS, FONTS, SPACING } from '@constants/theme';
 import { OnboardingStackParamList } from '@navigation/OnboardingNavigator';
+
+const FEDGE_LOGO = require('@assets/images/logo.png');
 
 const { width, height } = Dimensions.get('window');
 
@@ -114,7 +117,7 @@ export default function SplashScreen({ navigation }: Props) {
         />
       ))}
 
-      {/* Logo */}
+      {/* Logo Image */}
       <Animated.View
         style={[
           styles.logoContainer,
@@ -124,9 +127,16 @@ export default function SplashScreen({ navigation }: Props) {
           },
         ]}
       >
-        <Text style={styles.logoText}>FEDGE</Text>
-        <View style={styles.versionBadge}>
-          <Text style={styles.versionText}>2.O</Text>
+        <Image
+          source={FEDGE_LOGO}
+          style={styles.logoImage}
+          resizeMode="contain"
+        />
+        <View style={styles.logoTextRow}>
+          <Text style={styles.logoText}>FEDGE</Text>
+          <View style={styles.versionBadge}>
+            <Text style={styles.versionText}>2.O</Text>
+          </View>
         </View>
       </Animated.View>
 
@@ -177,7 +187,15 @@ const styles = StyleSheet.create({
   },
   logoContainer: {
     alignItems: 'center',
+    gap: SPACING.sm,
+  },
+  logoImage: {
+    width: 140,
+    height: 140,
+  },
+  logoTextRow: {
     flexDirection: 'row',
+    alignItems: 'center',
     gap: SPACING.sm,
   },
   logoText: {

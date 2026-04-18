@@ -7,9 +7,9 @@
     "icon": "./src/assets/images/icon.png",
     "userInterfaceStyle": "dark",
     "splash": {
-      "image": "./src/assets/images/splash.png",
+      "image": "./src/assets/images/logo.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0A0A1A"
+      "backgroundColor": "#06060F"
     },
     "ios": {
       "supportsTablet": false,
@@ -18,7 +18,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./src/assets/images/adaptive-icon.png",
-        "backgroundColor": "#0A0A1A"
+        "backgroundColor": "#E87012"
       },
       "package": "com.fedge2.creditgame"
     },
