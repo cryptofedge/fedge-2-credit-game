@@ -6,19 +6,12 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, Text, StyleSheet } from 'react-native';
+// View/Text/StyleSheet still used by TabIcon below
 import { COLORS, FONTS, RADIUS } from '@constants/theme';
 import HomeScreen from '@screens/main/HomeScreen';
 import SimulatorScreen from '@screens/main/SimulatorScreen';
 import MissionsNavigator from './MissionsNavigator';
-
-// Placeholder screens (to be built)
-const ProfileScreen = () => (
-  <View style={ph.c}><Text style={ph.t}>Profile — Coming Soon</Text></View>
-);
-const ph = StyleSheet.create({
-  c: { flex: 1, backgroundColor: COLORS.bg, alignItems: 'center', justifyContent: 'center' },
-  t: { color: COLORS.textSecondary, fontSize: FONTS.sizes.lg },
-});
+import ProfileScreen from '@screens/main/ProfileScreen';
 
 export type MainTabParamList = {
   Home: undefined;
