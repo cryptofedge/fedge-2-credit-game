@@ -8,6 +8,7 @@ import { CreditProfile, calculateCreditScore } from '@utils/creditScore';
 interface GameState {
   // Player
   playerName: string;
+  isGhostMode: boolean;
   level: number;
   xp: number;
   fedgeCoins: number;
@@ -24,6 +25,7 @@ interface GameState {
 
   // Actions
   setPlayerName: (name: string) => void;
+  setGhostMode: (ghost: boolean) => void;
   addXP: (amount: number) => void;
   addFedgeCoins: (amount: number) => void;
   updateCreditProfile: (updates: Partial<CreditProfile>) => void;
@@ -45,6 +47,7 @@ const DEFAULT_CREDIT_PROFILE: CreditProfile = {
 export const useGameStore = create<GameState>((set, get) => ({
   // Initial state
   playerName: '',
+  isGhostMode: false,
   level: 1,
   xp: 0,
   fedgeCoins: 100,
@@ -57,6 +60,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   // Actions
   setPlayerName: (name) => set({ playerName: name }),
+  setGhostMode: (ghost) => set({ isGhostMode: ghost }),
 
   addXP: (amount) =>
     set((state) => {

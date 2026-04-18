@@ -152,7 +152,7 @@ export default function HeroIntroScreen({ navigation }: Props) {
         <TouchableOpacity
           style={styles.ctaButton}
           activeOpacity={0.85}
-          onPress={() => navigation.navigate('ChoosePath')}
+          onPress={() => navigation.navigate('GhostMode')}
         >
           <Text style={styles.ctaText}>Begin My Journey →</Text>
         </TouchableOpacity>

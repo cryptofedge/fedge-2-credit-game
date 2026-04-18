@@ -7,16 +7,20 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
+import DisclaimerScreen from '@screens/onboarding/DisclaimerScreen';
 import SplashScreen from '@screens/onboarding/SplashScreen';
 import HeroIntroScreen from '@screens/onboarding/HeroIntroScreen';
+import GhostModeScreen from '@screens/onboarding/GhostModeScreen';
 import ChoosePathScreen from '@screens/onboarding/ChoosePathScreen';
 import ConnectBureausScreen from '@screens/onboarding/ConnectBureausScreen';
 import ScoreRevealScreen from '@screens/onboarding/ScoreRevealScreen';
 import FirstMissionScreen from '@screens/onboarding/FirstMissionScreen';
 
 export type OnboardingStackParamList = {
+  Disclaimer: undefined;
   Splash: undefined;
   HeroIntro: undefined;
+  GhostMode: undefined;
   ChoosePath: undefined;
   ConnectBureaus: undefined;
   ScoreReveal: undefined;
@@ -35,8 +39,10 @@ export default function OnboardingNavigator() {
         contentStyle: { backgroundColor: '#06060F' },
       }}
     >
+      <Stack.Screen name="Disclaimer" component={DisclaimerScreen} />
       <Stack.Screen name="Splash" component={SplashScreen} />
       <Stack.Screen name="HeroIntro" component={HeroIntroScreen} />
+      <Stack.Screen name="GhostMode" component={GhostModeScreen} />
       <Stack.Screen name="ChoosePath" component={ChoosePathScreen} />
       <Stack.Screen name="ConnectBureaus" component={ConnectBureausScreen} />
       <Stack.Screen name="ScoreReveal" component={ScoreRevealScreen} />

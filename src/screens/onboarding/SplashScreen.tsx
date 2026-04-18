@@ -83,7 +83,7 @@ export default function SplashScreen({ navigation }: Props) {
 
       // Auto-navigate after 3 seconds
       setTimeout(() => {
-        navigation.replace('HeroIntro');
+        navigation.replace('Disclaimer');
       }, 3200);
     });
   }, []);
