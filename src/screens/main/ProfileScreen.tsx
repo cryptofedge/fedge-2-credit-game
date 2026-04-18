@@ -132,7 +132,7 @@ const ring = StyleSheet.create({
 // ─────────────────────────────────────────────
 // Main Screen
 // ─────────────────────────────────────────────
-export default function ProfileScreen() {
+export default function ProfileScreen({ navigation }: any) {
   const playerName      = useGameStore((s) => s.playerName);
   const isGhostMode     = useGameStore((s) => s.isGhostMode);
   const setGhostMode    = useGameStore((s) => s.setGhostMode);
@@ -367,6 +367,20 @@ export default function ProfileScreen() {
                 </View>
               </View>
             </View>
+
+            <View style={styles.settingDivider} />
+
+            {/* Leaderboard link */}
+            <TouchableOpacity style={styles.settingRow} onPress={() => navigation?.navigate('Leaderboard')} activeOpacity={0.8}>
+              <View style={styles.settingLeft}>
+                <Text style={styles.settingIcon}>🏆</Text>
+                <View>
+                  <Text style={styles.settingLabel}>Leaderboard</Text>
+                  <Text style={styles.settingDesc}>See how you rank against other players</Text>
+                </View>
+              </View>
+              <Text style={styles.settingChevron}>→</Text>
+            </TouchableOpacity>
 
             <View style={styles.settingDivider} />
 

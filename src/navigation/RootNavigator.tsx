@@ -7,12 +7,12 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import OnboardingNavigator from './OnboardingNavigator';
-import MainTabNavigator from './MainTabNavigator';
+import MainAppNavigator from './MainAppNavigator';
 import { useGameStore } from '@store/gameStore';
 
 export type RootStackParamList = {
   Onboarding: undefined;
-  MainApp: undefined;
+  MainApp:    undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -30,7 +30,7 @@ export default function RootNavigator() {
         {!hasCompletedOnboarding ? (
           <Stack.Screen name="Onboarding" component={OnboardingNavigator} />
         ) : (
-          <Stack.Screen name="MainApp" component={MainTabNavigator} />
+          <Stack.Screen name="MainApp" component={MainAppNavigator} />
         )}
       </Stack.Navigator>
     </NavigationContainer>

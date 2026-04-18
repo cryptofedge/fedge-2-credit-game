@@ -381,6 +381,7 @@ export default function HomeScreen({ navigation }: any) {
                 onPress={() => {
                   if (action.screen === 'Simulator') navigation?.navigate('Simulator');
                   else if (action.screen === 'Missions') navigation?.navigate('Missions');
+                  else if (action.screen === 'Leaderboard') navigation?.navigate('Leaderboard');
                 }}
               >
                 <View style={[styles.actionIconBox, { backgroundColor: action.color + '18' }]}>
