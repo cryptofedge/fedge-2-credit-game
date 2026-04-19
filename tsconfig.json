@@ -7,11 +7,14 @@
       "@/*": ["src/*"],
       "@screens/*": ["src/screens/*"],
       "@components/*": ["src/components/*"],
+      "@navigation/*": ["src/navigation/*"],
       "@store/*": ["src/store/*"],
       "@services/*": ["src/services/*"],
       "@utils/*": ["src/utils/*"],
       "@hooks/*": ["src/hooks/*"],
-      "@assets/*": ["src/assets/*"]
+      "@assets/*": ["src/assets/*"],
+      "@constants/*": ["src/constants/*"],
+      "@data/*": ["src/data/*"]
     }
   }
 }
