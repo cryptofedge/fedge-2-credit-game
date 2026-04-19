@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FEDGE 2.O — Credit Education Game</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0A0A1A;display:flex;justify-content:center;align-items:center;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+::-webkit-scrollbar{width:0}
+input[type=range]{-webkit-appearance:none;width:100%;height:6px;border-radius:3px;background:#1E1E3A;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:#E87012;cursor:pointer;box-shadow:0 0 8px rgba(232,112,18,0.5)}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes glow{0%,100%{box-shadow:0 0 20px rgba(232,112,18,0.3)}50%{box-shadow:0 0 40px rgba(232,112,18,0.6)}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const{useState,useEffect,useRef}=React;
+
+const C={bg:'#06060F',card:'#0F0F1E',card2:'#141428',primary:'#E87012',gold:'#FFD700',green:'#00C853',red:'#FF4040',blue:'#4A9EFF',purple:'#A855F7',text:'#FFFFFF',sub:'#9090B0',muted:'#454565',border:'#1E1E3A'};
+
+function scoreColor(s){if(s<580)return C.red;if(s<670)return'#FF9500';if(s<740)return C.gold;if(s<800)return'#7BC67E';return C.green}
+function scoreLabel(s){if(s<580)return'Poor';if(s<670)return'Fair';if(s<740)return'Good';if(s<800)return'Very Good';return'Exceptional'}
+
+function ScoreRing({score,size=200}){
+  const r=size*0.38,cx=size/2,cy=size*0.55;
+  const circ=Math.PI*r,pct=(score-300)/550;
+  const color=scoreColor(score);
+  const filled=circ*Math.min(pct,1);
+  return(
+    <div style={{position:'relative',width:size,height:size*0.65,display:'flex',justifyContent:'center'}}>
+      <svg width={size} height={size*0.65} style={{overflow:'visible'}}>
+        <path d={`M${cx-r} ${cy} A${r} ${r} 0 0 1 ${cx+r} ${cy}`} fill="none" stroke={C.border} strokeWidth={size*0.065} strokeLinecap="round"/>
+        <path d={`M${cx-r} ${cy} A${r} ${r} 0 0 1 ${cx+r} ${cy}`} fill="none" stroke={color} strokeWidth={size*0.065} strokeLinecap="round" strokeDasharray={`${filled} ${circ}`} style={{filter:`drop-shadow(0 0 6px ${color})`}}/>
+        <text x={cx} y={cy-8} textAnchor="middle" fill={C.text} fontSize={size*0.21} fontWeight="900" fontFamily="-apple-system,sans-serif">{score}</text>
+        <text x={cx} y={cy+14} textAnchor="middle" fill={color} fontSize={size*0.08} fontWeight="700" fontFamily="-apple-system,sans-serif">{scoreLabel(score).toUpperCase()}</text>
+      </svg>
+    </div>
+  );
+}
+
+const MISSIONS=[
+  {id:1,title:'The 5 Factors',sub:'What makes your score',icon:'📊',color:C.primary,xp:150,
+   slides:[
+    {icon:'⏰',title:'Payment History (35%)',body:"The #1 factor. One late payment can drop your score 100+ points. Set up autopay — never miss again."},
+    {icon:'💳',title:'Credit Utilization (30%)',body:"Keep balances under 10% of your limit for max points. Under 30% is the minimum. Pay before statement closes."},
+    {icon:'📅',title:'Length of History (15%)',body:"The longer, the better. Never close your oldest card — it anchors your entire credit age and kills your score."},
+    {icon:'🔀',title:'Credit Mix (10%)',body:"Having revolving cards AND installment loans shows lenders you handle different credit types responsibly."},
+    {icon:'🆕',title:'New Credit (10%)',body:"Each hard inquiry drops your score 5-10 pts. Space applications 6+ months apart. Never apply in bulk."},
+   ],
+   quiz:[
+    {q:'What is the most important FICO factor?',opts:['Credit Mix','Payment History','Credit Age','Inquiries'],ans:1},
+    {q:'Ideal credit utilization rate?',opts:['Under 50%','Under 30%','Under 10%','Under 70%'],ans:2},
+    {q:'What anchors your credit age?',opts:['Newest card','Most used card','Oldest card','Highest limit card'],ans:2},
+    {q:'One late payment can drop score by:',opts:['5 pts','25 pts','50 pts','100+ pts'],ans:3},
+    {q:'How far apart should credit apps be?',opts:['1 month','6+ months','2 weeks','2 months'],ans:1},
+   ]
+  },
+  {id:2,title:'Utilization Mastery',sub:'The secret weapon',icon:'🎯',color:C.gold,xp:200,
+   slides:[
+    {icon:'📆',title:'The Statement Date Secret',body:"Utilization is calculated on your statement date — NOT your due date. Pay down 3 days before statement closes."},
+    {icon:'🎯',title:'The 10% Sweet Spot',body:"Under 10% per card scores maximally. Under 30% is OK. Over 30% starts hurting. Over 50% = serious damage."},
+    {icon:'🃏',title:'Per-Card vs Total',body:"FICO checks each individual card's utilization, not just overall. One maxed card hurts even if total looks fine."},
+    {icon:'⬆️',title:'The Limit Hack',body:"Request a credit limit increase every 6 months without spending more. Instantly lowers your utilization ratio."},
+    {icon:'👥',title:'Authorized User Play',body:"Get added as an authorized user on someone's old, low-utilization card. Instant 50-100 point boost."},
+   ],
+   quiz:[
+    {q:'When is utilization calculated?',opts:['Due date','Daily average','Statement date','Month end'],ans:2},
+    {q:'Best utilization per card?',opts:['Under 30%','Under 50%','Under 10%','Under 20%'],ans:2},
+    {q:'FICO checks utilization:',opts:['Total only','Per card only','Both total and per card','Neither'],ans:2},
+    {q:'The "limit hack" means:',opts:['Open new cards','Request limit increase','Transfer balances','Use 0% APR cards'],ans:1},
+    {q:'Authorized user boost can be:',opts:['5-10 pts','50-100 pts','1-5 pts','200+ pts'],ans:1},
+   ]
+  }
+];
+
+const SCENARIOS=[
+  {icon:'⚠️',title:'Missed Payment',desc:'Your credit card payment is 35 days past due. The issuer hasn\'t reported yet.',
+   choices:[
+    {text:'Pay now + call to request goodwill removal',impact:+12,good:true,explain:'Smart! Goodwill letters work 40% of the time. Paying stops the damage.'},
+    {text:'Wait — it\'ll fall off in 7 years',impact:-110,good:false,explain:'Wrong. Late payments are reported immediately and tank your score.'},
+   ]
+  },
+  {icon:'💳',title:'Maxed Out Card',desc:'Your $5,000 card is at $4,800 (96% util). Statement closes in 3 days.',
+   choices:[
+    {text:'Pay it to $400 before statement closes',impact:+52,good:true,explain:'Boom! 8% utilization reports instead of 96%. Massive score jump.'},
+    {text:'Pay minimum — I\'ll handle it next month',impact:-28,good:false,explain:'96% utilization gets reported and crushes your score.'},
+   ]
+  },
+  {icon:'✂️',title:'Close Old Card',desc:'You have a 12-year-old card with $0 balance. Annual fee is $95.',
+   choices:[
+    {text:'Call to downgrade to a no-fee version',impact:+8,good:true,explain:'Keeps the age intact! Many issuers will waive or downgrade for free.'},
+    {text:'Close it — why pay $95 for nothing?',impact:-45,good:false,explain:'Closing your oldest card destroys your credit age. Huge mistake.'},
+   ]
+  },
+  {icon:'🏦',title:'Rate Shopping',desc:'You want the best mortgage rate. 5 lenders want to pull your credit.',
+   choices:[
+    {text:'Apply to all 5 within a 14-day window',impact:-4,good:true,explain:'Multiple mortgage inquiries in 14 days count as ONE. Smart shopping!'},
+    {text:'Apply to one per month over 5 months',impact:-38,good:false,explain:'5 separate hard inquiries spread out = 5x the damage.'},
+   ]
+  },
+];
+
+// ─── Shared Styles ───────────────────────────────
+const S={
+  screen:{display:'flex',flexDirection:'column',height:'100%',overflowY:'auto',overflowX:'hidden',background:C.bg},
+  btn:(bg=`linear-gradient(135deg,${C.primary},#FF9A4A)`)=>({background:bg,border:'none',borderRadius:16,padding:'17px 28px',color:'#fff',fontSize:15,fontWeight:800,cursor:'pointer',width:'100%',letterSpacing:0.3}),
+  card:{background:C.card,borderRadius:20,padding:20,border:`1px solid ${C.border}`},
+  tag:(color)=>({background:`${color}22`,border:`1px solid ${color}44`,borderRadius:20,padding:'6px 14px',fontSize:13,color,fontWeight:700}),
+};
+
+// ─── Splash ──────────────────────────────────────
+function Splash({go}){
+  useEffect(()=>{const t=setTimeout(()=>go('hero'),2600);return()=>clearTimeout(t)},[]);
+  return(
+    <div style={{...S.screen,justifyContent:'center',alignItems:'center',gap:20}}>
+      <div style={{fontSize:90,animation:'pulse 1.8s infinite'}}>🏆</div>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:40,fontWeight:900,color:C.primary,letterSpacing:3}}>FEDGE 2.O</div>
+        <div style={{fontSize:13,color:C.sub,letterSpacing:5,marginTop:6}}>CREDIT EDUCATION</div>
+      </div>
+      <div style={{display:'flex',gap:10,marginTop:16}}>
+        {[0,1,2].map(i=><div key={i} style={{width:8,height:8,borderRadius:4,background:i===0?C.primary:C.muted,animation:`pulse 1s ${i*0.3}s infinite`}}/>)}
+      </div>
+    </div>
+  );
+}
+
+// ─── Hero ─────────────────────────────────────────
+function Hero({go}){
+  return(
+    <div style={{...S.screen,padding:'40px 28px 36px',justifyContent:'space-between',animation:'fadeUp 0.5s ease'}}>
+      <div>
+        <div style={{fontSize:13,color:C.primary,fontWeight:700,letterSpacing:3,marginBottom:20}}>POWERED BY FEDGE 2.O</div>
+        <div style={{fontSize:38,fontWeight:900,color:C.text,lineHeight:1.1,marginBottom:18}}>
+          Master Your<br/><span style={{color:C.primary}}>Credit Score</span><br/>Like a Pro
+        </div>
+        <div style={{fontSize:15,color:C.sub,lineHeight:1.7,marginBottom:36}}>
+          Build, fix, and maintain an 800+ credit score through real-life missions, scenarios, and expert lessons.
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:12,marginBottom:36}}>
+          {[['🎯','Missions'],['📊','Simulator'],['🎮','Scenarios']].map(([icon,label])=>(
+            <div key={label} style={{...S.card,textAlign:'center',padding:'18px 8px'}}>
+              <div style={{fontSize:28,marginBottom:8}}>{icon}</div>
+              <div style={{fontSize:12,color:C.sub,fontWeight:600}}>{label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <button style={S.btn()} onClick={()=>go('ghost')}>Start Your Journey ⚡</button>
+    </div>
+  );
+}
+
+// ─── Ghost Mode ──────────────────────────────────
+function Ghost({go}){
+  return(
+    <div style={{...S.screen,justifyContent:'center',alignItems:'center',padding:28,animation:'fadeUp 0.4s ease'}}>
+      <div style={{textAlign:'center',maxWidth:300}}>
+        <div style={{fontSize:88,marginBottom:24,animation:'pulse 2s infinite'}}>👻</div>
+        <div style={{fontSize:28,fontWeight:900,color:C.text,marginBottom:12}}>Ghost Mode</div>
+        <div style={{fontSize:15,color:C.sub,lineHeight:1.7,marginBottom:36}}>
+          Learn everything without connecting real accounts. Your journey stays completely private.
+        </div>
+        <button style={{...S.btn(),marginBottom:14}} onClick={()=>go('reveal')}>Continue as Ghost 👻</button>
+        <button onClick={()=>go('reveal')} style={{background:'transparent',border:`2px solid ${C.border}`,borderRadius:16,padding:'15px 28px',color:C.sub,fontSize:14,fontWeight:700,cursor:'pointer',width:'100%'}}>Connect Real Account</button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Score Reveal ─────────────────────────────────
+function Reveal({go}){
+  const[score,setScore]=useState(300);
+  const target=720;
+  useEffect(()=>{
+    const iv=setInterval(()=>setScore(s=>{if(s>=target){clearInterval(iv);return target}return Math.min(s+7,target)}),14);
+    return()=>clearInterval(iv);
+  },[]);
+  return(
+    <div style={{...S.screen,justifyContent:'center',alignItems:'center',padding:28,animation:'fadeUp 0.4s ease'}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontSize:13,color:C.sub,letterSpacing:3,marginBottom:28}}>YOUR DEMO SCORE</div>
+        <div style={{display:'flex',justifyContent:'center',marginBottom:20}}>
+          <ScoreRing score={score} size={230}/>
+        </div>
+        <div style={{fontSize:15,color:C.sub,marginBottom:36,lineHeight:1.7}}>
+          You're <span style={{color:C.gold,fontWeight:700}}>Good</span> — let's get you to{' '}
+          <span style={{color:C.green,fontWeight:700}}>Exceptional (800+)</span>
+        </div>
+        <button style={{...S.btn(),opacity:score>=target?1:0.3}} disabled={score<target} onClick={()=>go('home')}>Let's Build It! 🚀</button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Home ─────────────────────────────────────────
+function Home({gs,go}){
+  return(
+    <div style={{...S.screen,padding:'22px 18px 100px',gap:16,animation:'fadeUp 0.3s ease'}}>
+      {/* Header */}
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+        <div>
+          <div style={{fontSize:22,fontWeight:900,color:C.text}}>FEDGE 2.O</div>
+          <div style={{fontSize:13,color:C.sub}}>Credit Dashboard</div>
+        </div>
+        <div style={{display:'flex',gap:10}}>
+          <span style={S.tag(C.gold)}>🔥 {gs.streak}</span>
+          <span style={S.tag('#AA8800')}>🪙 {gs.coins}</span>
+        </div>
+      </div>
+      {/* Score Card */}
+      <div style={{...S.card,textAlign:'center'}}>
+        <div style={{fontSize:11,color:C.sub,letterSpacing:3,marginBottom:12}}>CREDIT SCORE</div>
+        <div style={{display:'flex',justifyContent:'center'}}><ScoreRing score={gs.score} size={210}/></div>
+        <div style={{marginTop:12}}>
+          <div style={{display:'flex',justifyContent:'space-between',fontSize:12,color:C.sub,marginBottom:6}}>
+            <span>Level {gs.level} • {gs.xp.toLocaleString()} XP</span>
+            <span style={{color:C.primary}}>2,000 XP</span>
+          </div>
+          <div style={{height:6,background:C.border,borderRadius:3}}>
+            <div style={{height:'100%',width:`${gs.xp/20}%`,background:`linear-gradient(90deg,${C.primary},#FF9A4A)`,borderRadius:3}}/>
+          </div>
+        </div>
+      </div>
+      {/* Bureau Snapshot */}
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:10}}>
+        {[['Equifax',716,C.primary],['Experian',724,C.green],['TransUnion',720,C.blue]].map(([b,s,col])=>(
+          <div key={b} style={{...S.card,textAlign:'center',padding:'14px 8px'}}>
+            <div style={{fontSize:22,fontWeight:900,color:col}}>{s}</div>
+            <div style={{fontSize:10,color:C.sub,marginTop:4}}>{b}</div>
+          </div>
+        ))}
+      </div>
+      {/* Quick Actions */}
+      <div style={{fontSize:12,color:C.sub,fontWeight:700,letterSpacing:2}}>QUICK ACTIONS</div>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+        {[['📊','Simulator','simulator'],['🎯','Missions','missions'],['🎮','Scenarios','scenarios'],['🏆','Leaderboard','leaderboard']].map(([icon,label,route])=>(
+          <button key={route} onClick={()=>go(route)} style={{...S.card,cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',gap:10,border:'none',padding:'20px 16px'}}>
+            <span style={{fontSize:28}}>{icon}</span>
+            <span style={{fontSize:13,color:C.text,fontWeight:700}}>{label}</span>
+          </button>
+        ))}
+      </div>
+      {/* Next Mission CTA */}
+      <div onClick={()=>go('missions')} style={{...S.card,background:`linear-gradient(135deg,${C.primary}18,${C.card})`,border:`1px solid ${C.primary}44`,cursor:'pointer',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+        <div>
+          <div style={{fontSize:12,color:C.primary,fontWeight:700,letterSpacing:2}}>NEXT MISSION</div>
+          <div style={{fontSize:18,fontWeight:800,color:C.text,marginTop:4}}>Dispute Like a Pro</div>
+          <div style={{fontSize:13,color:C.sub,marginTop:4}}>+250 XP • 5 lessons</div>
+        </div>
+        <div style={{fontSize:44}}>⚡</div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Missions List ────────────────────────────────
+function MissionsList({gs,go,onMission}){
+  return(
+    <div style={{...S.screen,padding:'22px 18px 100px',animation:'fadeUp 0.3s ease'}}>
+      <div style={{fontSize:24,fontWeight:900,color:C.text,marginBottom:4}}>Missions</div>
+      <div style={{fontSize:14,color:C.sub,marginBottom:20}}>2 of 8 complete • 350 XP earned</div>
+      {/* Progress bar */}
+      <div style={{...S.card,marginBottom:20}}>
+        <div style={{display:'flex',justifyContent:'space-between',fontSize:13,fontWeight:700,marginBottom:8}}>
+          <span style={{color:C.text}}>Overall Progress</span>
+          <span style={{color:C.primary}}>25%</span>
+        </div>
+        <div style={{height:8,background:C.border,borderRadius:4}}>
+          <div style={{height:'100%',width:'25%',background:`linear-gradient(90deg,${C.primary},${C.gold})`,borderRadius:4}}/>
+        </div>
+      </div>
+      {MISSIONS.map(m=>(
+        <div key={m.id} onClick={()=>onMission(m)} style={{...S.card,marginBottom:14,cursor:'pointer',borderLeft:`4px solid ${m.color}`,padding:'18px 18px 18px 20px',display:'flex',gap:16,alignItems:'center'}}>
+          <div style={{fontSize:40}}>{m.icon}</div>
+          <div style={{flex:1}}>
+            <div style={{fontSize:16,fontWeight:800,color:C.text}}>{m.title}</div>
+            <div style={{fontSize:13,color:C.sub,marginTop:3}}>{m.sub}</div>
+            <div style={{fontSize:12,color:m.color,marginTop:6,fontWeight:700}}>+{m.xp} XP • 5 lessons + quiz</div>
+          </div>
+          <div style={{fontSize:22,color:m.color}}>▶</div>
+        </div>
+      ))}
+      {[['⚔️','Dispute Like a Pro',250],['🚀','Score 800+',300],['💳','Credit Cards 101',175],['🏦','Mortgage Mastery',350]].map(([icon,title,xp])=>(
+        <div key={title} style={{...S.card,marginBottom:14,opacity:0.4,display:'flex',gap:16,alignItems:'center'}}>
+          <div style={{fontSize:40}}>{icon}</div>
+          <div>
+            <div style={{fontSize:16,fontWeight:800,color:C.text}}>{title}</div>
+            <div style={{fontSize:12,color:C.sub,marginTop:6}}>+{xp} XP • Locked 🔒</div>
+          </div>
+        </div>
+      ))}
+      <div onClick={()=>go('scenarios')} style={{...S.card,background:`linear-gradient(135deg,${C.purple}18,${C.card})`,border:`1px solid ${C.purple}44`,cursor:'pointer',textAlign:'center',padding:24}}>
+        <div style={{fontSize:40,marginBottom:8}}>🎮</div>
+        <div style={{fontSize:17,fontWeight:800,color:C.text}}>Real Life Scenarios</div>
+        <div style={{fontSize:13,color:C.sub,marginTop:4}}>Make credit decisions — see the impact</div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Mission Player ───────────────────────────────
+function MissionPlayer({mission,onDone}){
+  const[phase,setPhase]=useState('lesson');
+  const[slide,setSlide]=useState(0);
+  const[qIdx,setQIdx]=useState(0);
+  const[sel,setSel]=useState(null);
+  const[correct,setCorrect]=useState(0);
+
+  const sl=mission.slides[slide];
+  const q=mission.quiz[qIdx];
+
+  function pickAnswer(i){
+    if(sel!==null)return;
+    setSel(i);
+    if(i===q.ans)setCorrect(c=>c+1);
+    setTimeout(()=>{
+      setSel(null);
+      if(qIdx===mission.quiz.length-1)setPhase('results');
+      else setQIdx(x=>x+1);
+    },1400);
+  }
+
+  if(phase==='results'){
+    const pct=Math.round(correct/mission.quiz.length*100);
+    const xp=Math.round(mission.xp*(correct/mission.quiz.length));
+    return(
+      <div style={{...S.screen,justifyContent:'center',alignItems:'center',padding:28,textAlign:'center',animation:'fadeUp 0.4s ease'}}>
+        <div style={{fontSize:80,marginBottom:20}}>🎉</div>
+        <div style={{fontSize:28,fontWeight:900,color:C.text,marginBottom:8}}>Mission Complete!</div>
+        <div style={{fontSize:52,fontWeight:900,color:C.gold,margin:'16px 0'}}>{pct}%</div>
+        <div style={{fontSize:15,color:C.sub,marginBottom:24}}>{correct}/{mission.quiz.length} correct</div>
+        <div style={{...S.card,background:`${C.primary}18`,border:`1px solid ${C.primary}44`,marginBottom:28}}>
+          <div style={{fontSize:34,fontWeight:900,color:C.primary}}>+{xp} XP ⚡</div>
+          <div style={{fontSize:13,color:C.sub,marginTop:6}}>Added to your profile</div>
+        </div>
+        <button style={S.btn()} onClick={onDone}>Back to Missions</button>
+      </div>
+    );
+  }
+
+  if(phase==='quiz'){
+    return(
+      <div style={{...S.screen,padding:'24px 18px',animation:'fadeUp 0.3s ease'}}>
+        <div style={{fontSize:12,color:C.sub,letterSpacing:2,marginBottom:12}}>QUESTION {qIdx+1} OF {mission.quiz.length}</div>
+        <div style={{height:4,background:C.border,borderRadius:2,marginBottom:28}}>
+          <div style={{height:'100%',width:`${(qIdx/mission.quiz.length)*100}%`,background:mission.color,borderRadius:2,transition:'width 0.3s'}}/>
+        </div>
+        <div style={{fontSize:21,fontWeight:800,color:C.text,lineHeight:1.35,marginBottom:28}}>{q.q}</div>
+        <div style={{display:'flex',flexDirection:'column',gap:12}}>
+          {q.opts.map((opt,i)=>{
+            let bg=C.card,border=C.border,col=C.text;
+            if(sel!==null){
+              if(i===q.ans){bg=`${C.green}22`;border=C.green;col=C.green;}
+              else if(i===sel){bg=`${C.red}22`;border=C.red;col=C.red;}
+            }
+            return(
+              <button key={i} onClick={()=>pickAnswer(i)} style={{background:bg,border:`2px solid ${border}`,borderRadius:16,padding:'18px 20px',textAlign:'left',color:col,fontSize:15,fontWeight:600,cursor:'pointer',transition:'all 0.25s'}}>
+                {opt}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  return(
+    <div style={{...S.screen,padding:'24px 18px 32px',animation:'fadeUp 0.3s ease'}}>
+      <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:16}}>
+        <button onClick={onDone} style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:'8px 14px',color:C.text,fontSize:16,cursor:'pointer'}}>←</button>
+        <div style={{fontSize:15,fontWeight:800,color:C.text,flex:1}}>{mission.title}</div>
+        <span style={S.tag(mission.color)}>{slide+1}/{mission.slides.length}</span>
+      </div>
+      <div style={{height:4,background:C.border,borderRadius:2,marginBottom:28}}>
+        <div style={{height:'100%',width:`${((slide+1)/mission.slides.length)*100}%`,background:mission.color,borderRadius:2,transition:'width 0.3s'}}/>
+      </div>
+      <div style={{...S.card,flex:1,textAlign:'center',padding:28,marginBottom:20,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center'}}>
+        <div style={{fontSize:72,marginBottom:20}}>{sl.icon}</div>
+        <div style={{fontSize:20,fontWeight:900,color:C.text,marginBottom:16,lineHeight:1.25}}>{sl.title}</div>
+        <div style={{fontSize:15,color:C.sub,lineHeight:1.85}}>{sl.body}</div>
+      </div>
+      <button style={S.btn(slide===mission.slides.length-1?`linear-gradient(135deg,${C.green},#00A843)`:`linear-gradient(135deg,${C.primary},#FF9A4A)`)}
+        onClick={()=>{if(slide===mission.slides.length-1)setPhase('quiz');else setSlide(s=>s+1)}}>
+        {slide===mission.slides.length-1?'🎯 Take the Quiz!':'Next →'}
+      </button>
+    </div>
+  );
+}
+
+// ─── Simulator ────────────────────────────────────
+function Simulator(){
+  const[f,setF]=useState({pay:97,util:12,age:7,mix:3,inq:1});
+  function calc(){
+    const p=(f.pay/100)*35;
+    const u=(1-f.util/100)*30;
+    const a=Math.min(f.age/15,1)*15;
+    const m=(f.mix/5)*10;
+    const i=Math.max(0,1-f.inq/6)*10;
+    return Math.round(300+(p+u+a+m+i)/100*550);
+  }
+  const score=calc();
+  const sliders=[
+    {k:'pay',label:'⏰ Payment History',desc:`${f.pay}% on-time`,min:0,max:100,weight:'35%'},
+    {k:'util',label:'💳 Utilization',desc:`${f.util}% used`,min:0,max:100,weight:'30%'},
+    {k:'age',label:'📅 Credit Age',desc:`${f.age} years avg`,min:0,max:20,weight:'15%'},
+    {k:'mix',label:'🔀 Account Types',desc:`${f.mix} types`,min:0,max:5,weight:'10%'},
+    {k:'inq',label:'🆕 Recent Inquiries',desc:`${f.inq} inquiries`,min:0,max:6,weight:'10%'},
+  ];
+  return(
+    <div style={{...S.screen,padding:'22px 18px 100px',animation:'fadeUp 0.3s ease'}}>
+      <div style={{fontSize:24,fontWeight:900,color:C.text,marginBottom:4}}>Score Simulator</div>
+      <div style={{fontSize:14,color:C.sub,marginBottom:20}}>Drag sliders — watch your score move live</div>
+      <div style={{display:'flex',justifyContent:'center',marginBottom:20}}><ScoreRing score={score} size={200}/></div>
+      {sliders.map(s=>(
+        <div key={s.k} style={{...S.card,marginBottom:14}}>
+          <div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}>
+            <div style={{fontSize:14,fontWeight:700,color:C.text}}>{s.label}</div>
+            <span style={S.tag(C.primary)}>{s.weight}</span>
+          </div>
+          <div style={{fontSize:12,color:C.sub,marginBottom:12}}>{s.desc}</div>
+          <input type="range" min={s.min} max={s.max} value={f[s.k]} onChange={e=>setF(x=>({...x,[s.k]:+e.target.value}))} style={{accentColor:C.primary}}/>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── Scenarios ────────────────────────────────────
+function Scenarios({gs,setGs}){
+  const[idx,setIdx]=useState(0);
+  const[chosen,setChosen]=useState(null);
+  const sc=SCENARIOS[idx];
+
+  function pick(c){
+    if(chosen)return;
+    setChosen(c);
+    setGs(g=>({...g,score:Math.max(300,Math.min(850,g.score+c.impact))}));
+  }
+
+  function next(){
+    if(idx<SCENARIOS.length-1){setIdx(i=>i+1);setChosen(null);}
+  }
+
+  return(
+    <div style={{...S.screen,padding:'22px 18px 100px',animation:'fadeUp 0.3s ease'}}>
+      <div style={{fontSize:24,fontWeight:900,color:C.text,marginBottom:4}}>Real Life Scenarios</div>
+      <div style={{fontSize:14,color:C.sub,marginBottom:16}}>Make the call — see the score impact</div>
+      <div style={{display:'flex',gap:8,marginBottom:20}}>
+        {SCENARIOS.map((_,i)=><div key={i} style={{flex:1,height:4,borderRadius:2,background:i<=idx?C.primary:C.border,transition:'background 0.3s'}}/>)}
+      </div>
+      <div style={{...S.card,textAlign:'center',marginBottom:16,padding:28}}>
+        <div style={{fontSize:56,marginBottom:14}}>{sc.icon}</div>
+        <div style={{fontSize:20,fontWeight:900,color:C.text,marginBottom:10}}>{sc.title}</div>
+        <div style={{fontSize:15,color:C.sub,lineHeight:1.7}}>{sc.desc}</div>
+      </div>
+      {chosen?(
+        <>
+          <div style={{...S.card,background:chosen.good?`${C.green}18`:`${C.red}18`,border:`1px solid ${chosen.good?C.green:C.red}`,textAlign:'center',marginBottom:14}}>
+            <div style={{fontSize:32,fontWeight:900,color:chosen.good?C.green:C.red,marginBottom:4}}>
+              {chosen.impact>0?'+':''}{chosen.impact} pts
+            </div>
+            <div style={{fontSize:14,color:C.sub,marginBottom:4}}>{chosen.good?'✅ Smart move!':'⚠️ That hurt!'}</div>
+            <div style={{fontSize:13,color:C.sub,lineHeight:1.6}}>{chosen.explain}</div>
+          </div>
+          {idx<SCENARIOS.length-1&&<button style={S.btn()} onClick={next}>Next Scenario →</button>}
+          {idx===SCENARIOS.length-1&&(
+            <div style={{textAlign:'center',marginTop:16}}>
+              <div style={{fontSize:52,marginBottom:12}}>🏆</div>
+              <div style={{fontSize:20,fontWeight:900,color:C.text}}>All Scenarios Done!</div>
+              <div style={{fontSize:15,color:C.sub,marginTop:8}}>Final: <span style={{color:scoreColor(gs.score),fontWeight:800}}>{gs.score}</span></div>
+            </div>
+          )}
+        </>
+      ):(
+        <div style={{display:'flex',flexDirection:'column',gap:12}}>
+          {sc.choices.map((c,i)=>(
+            <button key={i} onClick={()=>pick(c)} style={{...S.card,border:`2px solid ${C.border}`,textAlign:'left',color:C.text,fontSize:14,fontWeight:600,cursor:'pointer',padding:'20px 18px'}}>
+              {c.text}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Profile ──────────────────────────────────────
+function Profile({gs}){
+  const badges=[['🎯','First Mission',true],['🔥','7-Day Streak',true],['📊','Simulator Pro',true],['💳','Util Master',true],['🚀','Score 750+',gs.score>=750],['🏆','Score 800+',gs.score>=800],['⚡','1000 XP',gs.xp>=1000],['🌟','All Missions',false]];
+  return(
+    <div style={{...S.screen,padding:'22px 18px 100px',animation:'fadeUp 0.3s ease'}}>
+      <div style={{fontSize:24,fontWeight:900,color:C.text,marginBottom:20}}>Profile</div>
+      <div style={{...S.card,textAlign:'center',marginBottom:16}}>
+        <div style={{width:72,height:72,borderRadius:36,background:`linear-gradient(135deg,${C.primary},${C.gold})`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 12px',fontSize:28,fontWeight:900,color:'#000'}}>{gs.level}</div>
+        <div style={{fontSize:20,fontWeight:900,color:C.text}}>Level {gs.level} Learner</div>
+        <div style={{fontSize:13,color:C.sub,marginTop:4,marginBottom:16}}>Credit Pathfinder 🔑</div>
+        <div style={{display:'flex',justifyContent:'space-between',fontSize:12,color:C.sub,marginBottom:6}}>
+          <span>{gs.xp.toLocaleString()} XP</span><span style={{color:C.primary}}>2,000 XP → Level 4</span>
+        </div>
+        <div style={{height:6,background:C.border,borderRadius:3}}>
+          <div style={{height:'100%',width:`${gs.xp/20}%`,background:`linear-gradient(90deg,${C.primary},${C.gold})`,borderRadius:3}}/>
+        </div>
+      </div>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:10,marginBottom:16}}>
+        {[['📊',gs.score,'Score'],['🔥',gs.streak,'Streak'],['🪙',gs.coins,'Coins'],['⚡',gs.xp.toLocaleString(),'Total XP'],['🎯','2/8','Missions'],['✅','14','Quizzes']].map(([icon,val,label])=>(
+          <div key={label} style={{...S.card,textAlign:'center',padding:'14px 8px'}}>
+            <div style={{fontSize:20}}>{icon}</div>
+            <div style={{fontSize:17,fontWeight:900,color:C.text,marginTop:6}}>{val}</div>
+            <div style={{fontSize:11,color:C.sub,marginTop:3}}>{label}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{fontSize:12,color:C.sub,fontWeight:700,letterSpacing:2,marginBottom:12}}>ACHIEVEMENTS</div>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:10}}>
+        {badges.map(([icon,name,earned])=>(
+          <div key={name} style={{...S.card,textAlign:'center',padding:'14px 6px',opacity:earned?1:0.3}}>
+            <div style={{fontSize:26}}>{icon}</div>
+            <div style={{fontSize:10,color:C.sub,marginTop:6,lineHeight:1.3}}>{name}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Leaderboard ──────────────────────────────────
+function Leaderboard({gs}){
+  const players=[
+    {rank:1,name:'CreditKing👑',score:851,xp:14200,badge:'🥇',color:C.gold},
+    {rank:2,name:'MoneyMaven',score:834,xp:11800,badge:'🥈',color:C.sub},
+    {rank:3,name:'ScoreGoat🐐',score:821,xp:10100,badge:'🥉',color:'#CD7F32'},
+    {rank:4,name:'FinanceFreak',score:808,xp:8900,badge:'',color:C.muted},
+    {rank:5,name:'CashQueen💅',score:799,xp:7600,badge:'',color:C.muted},
+    {rank:47,name:'You 👻',score:gs.score,xp:gs.xp,badge:'',color:C.primary,isUser:true},
+  ];
+  const top3=[players[1],players[0],players[2]];
+  const heights=[90,130,70];
+  const colors=[C.sub,C.gold,'#CD7F32'];
+  return(
+    <div style={{...S.screen,padding:'22px 18px 100px',animation:'fadeUp 0.3s ease'}}>
+      <div style={{fontSize:24,fontWeight:900,color:C.text,marginBottom:4}}>Leaderboard</div>
+      <div style={{fontSize:14,color:C.sub,marginBottom:20}}>Top earners this week</div>
+      {/* Podium */}
+      <div style={{display:'flex',alignItems:'flex-end',justifyContent:'center',gap:10,marginBottom:28,height:160}}>
+        {top3.map((p,i)=>(
+          <div key={p.rank} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center'}}>
+            <div style={{fontSize:13,fontWeight:800,color:C.text,marginBottom:6,textAlign:'center'}}>{p.name}</div>
+            <div style={{width:'100%',height:heights[i],background:`${colors[i]}20`,borderRadius:'12px 12px 0 0',border:`2px solid ${colors[i]}50`,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:4}}>
+              <div style={{fontSize:26}}>{p.badge||`#${p.rank}`}</div>
+              <div style={{fontSize:15,fontWeight:900,color:colors[i]}}>{p.score}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+      {/* List */}
+      {players.map(p=>(
+        <div key={p.rank} style={{...S.card,marginBottom:10,background:p.isUser?`${C.primary}15`:C.card,border:`1px solid ${p.isUser?C.primary:C.border}`,display:'flex',alignItems:'center',gap:14}}>
+          <div style={{fontSize:16,fontWeight:900,color:p.isUser?C.primary:C.muted,width:32}}>#{p.rank}</div>
+          <div style={{flex:1}}>
+            <div style={{fontSize:14,fontWeight:700,color:C.text}}>{p.name}</div>
+            <div style={{fontSize:12,color:C.sub,marginTop:2}}>{p.xp.toLocaleString()} XP</div>
+          </div>
+          <div style={{fontSize:18,fontWeight:900,color:scoreColor(p.score)}}>{p.score}</div>
+        </div>
+      ))}
+      <div style={{...S.card,background:`${C.primary}10`,border:`1px solid ${C.primary}30`,textAlign:'center',marginTop:8}}>
+        <div style={{fontSize:13,color:C.sub}}>Complete missions to climb the board 🚀</div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Bottom Nav ───────────────────────────────────
+function BottomNav({active,go}){
+  const tabs=[['🏠','Home','home'],['🎯','Missions','missions'],['📊','Simulator','simulator'],['👤','Profile','profile']];
+  return(
+    <div style={{position:'absolute',bottom:0,left:0,right:0,background:C.card,borderTop:`1px solid ${C.border}`,display:'flex',paddingBottom:16,paddingTop:8}}>
+      {tabs.map(([icon,label,route])=>(
+        <button key={route} onClick={()=>go(route)} style={{flex:1,background:'none',border:'none',cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',gap:3,padding:'4px 0'}}>
+          <div style={{fontSize:22,filter:active===route?'none':'grayscale(100%) opacity(0.35)',transition:'filter 0.2s'}}>{icon}</div>
+          <div style={{fontSize:10,fontWeight:700,color:active===route?C.primary:C.muted}}>{label}</div>
+          {active===route&&<div style={{width:4,height:4,borderRadius:2,background:C.primary}}/>}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ─── Root App ─────────────────────────────────────
+const MAIN=['home','missions','simulator','scenarios','profile','leaderboard'];
+function App(){
+  const[screen,setScreen]=useState('splash');
+  const[mission,setMission]=useState(null);
+  const[gs,setGs]=useState({score:720,xp:1250,level:3,coins:450,streak:7});
+
+  function go(s){setMission(null);setScreen(s);}
+  const isMain=MAIN.includes(screen);
+
+  function renderScreen(){
+    if(screen==='splash')return<Splash go={go}/>;
+    if(screen==='hero')return<Hero go={go}/>;
+    if(screen==='ghost')return<Ghost go={go}/>;
+    if(screen==='reveal')return<Reveal go={go}/>;
+    if(screen==='home')return<Home gs={gs} go={go}/>;
+    if(screen==='missions'){
+      if(mission)return<MissionPlayer mission={mission} onDone={()=>{setMission(null);}}/>;
+      return<MissionsList gs={gs} go={go} onMission={setMission}/>;
+    }
+    if(screen==='simulator')return<Simulator/>;
+    if(screen==='scenarios')return<Scenarios gs={gs} setGs={setGs}/>;
+    if(screen==='profile')return<Profile gs={gs}/>;
+    if(screen==='leaderboard')return<Leaderboard gs={gs}/>;
+  }
+
+  return(
+    <div style={{minHeight:'100vh',background:'#080818',display:'flex',justifyContent:'center',alignItems:'center',padding:20}}>
+      <style>{`*{-webkit-tap-highlight-color:transparent}button{transition:opacity 0.15s}button:active{opacity:0.7}`}</style>
+      <div style={{width:390,height:844,background:C.bg,borderRadius:44,overflow:'hidden',position:'relative',boxShadow:'0 0 0 2px #2a2a3a,0 0 80px rgba(232,112,18,0.2),0 40px 100px rgba(0,0,0,0.6)'}}>
+        <div style={{position:'absolute',inset:0,overflow:'hidden'}}>
+          {renderScreen()}
+        </div>
+        {isMain&&<BottomNav active={screen} go={go}/>}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
