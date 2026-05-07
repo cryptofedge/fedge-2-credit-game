@@ -41,21 +41,21 @@ FEDGE 2.O is an educational mobile game for iOS and Android that gamifies the jo
 
 ```
 fedge-2-credit-game/
-Γö£ΓöÇΓöÇ src/
-Γöé   Γö£ΓöÇΓöÇ screens/          # App screens (Home, Game, Profile, etc.)
-Γöé   Γö£ΓöÇΓöÇ components/       # Reusable UI components
-Γöé   Γö£ΓöÇΓöÇ navigation/       # Navigation config and stacks
-Γöé   Γö£ΓöÇΓöÇ store/            # Zustand state stores
-Γöé   Γö£ΓöÇΓöÇ services/         # API calls, Supabase client
-Γöé   Γö£ΓöÇΓöÇ hooks/            # Custom React hooks
-Γöé   Γö£ΓöÇΓöÇ utils/            # Helper functions, credit score logic
-Γöé   ΓööΓöÇΓöÇ assets/           # Images, fonts, sounds
-Γö£ΓöÇΓöÇ docs/                 # Game design docs, architecture notes
-Γö£ΓöÇΓöÇ design/               # Wireframes, mockups, brand assets
-Γö£ΓöÇΓöÇ .github/
-Γöé   Γö£ΓöÇΓöÇ workflows/        # GitHub Actions CI/CD
-Γöé   ΓööΓöÇΓöÇ ISSUE_TEMPLATE/   # Bug & feature request templates
-ΓööΓöÇΓöÇ app.json              # Expo config
+├── src/
+│   ├── screens/          # App screens (Home, Game, Profile, etc.)
+│   ├── components/       # Reusable UI components
+│   ├── navigation/       # Navigation config and stacks
+│   ├── store/            # Zustand state stores
+│   ├── services/         # API calls, Supabase client
+│   ├── hooks/            # Custom React hooks
+│   ├── utils/            # Helper functions, credit score logic
+│   └── assets/           # Images, fonts, sounds
+├── docs/                 # Game design docs, architecture notes
+├── design/               # Wireframes, mockups, brand assets
+├── .github/
+│   ├── workflows/        # GitHub Actions CI/CD
+│   └── ISSUE_TEMPLATE/   # Bug & feature request templates
+└── app.json              # Expo config
 ```
 
 ---
@@ -160,6 +160,7 @@ Email: **cryptofedge@gmail.com**
 ---
 
 **Learn more:** [Full License](LICENSE)
+
 
 
 
