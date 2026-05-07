@@ -1,24 +1,24 @@
-﻿# FEDGE 2.O ΓÇö Credit Education Mobile Game
+﻿# FEDGE 2.O - Credit Education Mobile Game
 
-> **Learn it. Build it. Own it.** ΓÇö A mobile game powered by FEDGE 2.O that helps users understand how to build, fix, and maintain their credit score to the highest standard.
+> **Learn it. Build it. Own it.** - A mobile game powered by FEDGE 2.O that helps users understand how to build, fix, and maintain their credit score to the highest standard.
 
 ---
 
 ## ≡ƒÄ» Overview
 
-FEDGE 2.O is an educational mobile game for iOS and Android that gamifies the journey to financial freedom through credit mastery. Players progress through levels, complete real-world credit challenges, and earn rewards ΓÇö all while building genuine financial literacy.
+FEDGE 2.O is an educational mobile game for iOS and Android that gamifies the journey to financial freedom through credit mastery. Players progress through levels, complete real-world credit challenges, and earn rewards - all while building genuine financial literacy.
 
 ---
 
 ## ≡ƒô▒ Features
 
-- **Credit Score Simulator** ΓÇö See how real actions impact your score in real time
-- **Gamified Learning Modules** ΓÇö Quizzes, missions, and storylines about credit fundamentals
-- **FEDGE Score System** ΓÇö Custom in-game scoring that mirrors real credit bureau logic
-- **Credit Repair Path** ΓÇö Step-by-step guided missions for users rebuilding credit
-- **Progress Dashboard** ΓÇö Visual tracking of in-game credit health and achievements
-- **Daily Challenges** ΓÇö Habit-building streaks tied to real credit best practices
-- **Leaderboard** ΓÇö Compete with friends on the path to perfect credit
+- **Credit Score Simulator** - See how real actions impact your score in real time
+- **Gamified Learning Modules** - Quizzes, missions, and storylines about credit fundamentals
+- **FEDGE Score System** - Custom in-game scoring that mirrors real credit bureau logic
+- **Credit Repair Path** - Step-by-step guided missions for users rebuilding credit
+- **Progress Dashboard** - Visual tracking of in-game credit health and achievements
+- **Daily Challenges** - Habit-building streaks tied to real credit best practices
+- **Leaderboard** - Compete with friends on the path to perfect credit
 
 ---
 
@@ -116,7 +116,7 @@ This project is powered by FEDGE 2.O. For contribution guidelines, see [CONTRIBU
 
 ## ≡ƒôä License
 
-┬⌐ 2026 FEDGE 2.O. All rights reserved.
+© 2026 FEDGE 2.O. All rights reserved.
 
 ---
 
@@ -126,7 +126,7 @@ This project is powered by FEDGE 2.O. For contribution guidelines, see [CONTRIBU
 
 ### FEDGE 2.O | Powered by Rafael Fellito Rodriguez and Eclat Universe
 
-**┬⌐ 2026 FEDGE 2.O. All rights reserved.**
+**© 2026 FEDGE 2.O. All rights reserved.**
 
 This project is part of the FEDGE 2.O ecosystem and is protected under full intellectual property rights reserved by Rafael Fellito Rodriguez and Eclat Universe.
 
@@ -139,11 +139,11 @@ This project is part of the FEDGE 2.O ecosystem and is protected under full inte
 
 ### Key Rights
 
-Γ£ô **All intellectual property retained**
-Γ£ô **Reproduction prohibited without permission**
-Γ£ô **Distribution rights reserved**
-Γ£ô **Derivative works not permitted**
-Γ£ô **Commercial use requires authorization**
+✓ **All intellectual property retained**
+✓ **Reproduction prohibited without permission**
+✓ **Distribution rights reserved**
+✓ **Derivative works not permitted**
+✓ **Commercial use requires authorization**
 
 ### Attribution
 
@@ -160,4 +160,5 @@ Email: **cryptofedge@gmail.com**
 ---
 
 **Learn more:** [Full License](LICENSE)
+
 
