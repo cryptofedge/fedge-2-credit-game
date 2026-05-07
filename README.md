@@ -4,13 +4,13 @@
 
 ---
 
-## ≡ƒÄ» Overview
+## 🎯 Overview
 
 FEDGE 2.O is an educational mobile game for iOS and Android that gamifies the journey to financial freedom through credit mastery. Players progress through levels, complete real-world credit challenges, and earn rewards - all while building genuine financial literacy.
 
 ---
 
-## ≡ƒô▒ Features
+## 📱 Features
 
 - **Credit Score Simulator** - See how real actions impact your score in real time
 - **Gamified Learning Modules** - Quizzes, missions, and storylines about credit fundamentals
@@ -22,7 +22,7 @@ FEDGE 2.O is an educational mobile game for iOS and Android that gamifies the jo
 
 ---
 
-## ≡ƒ¢á∩╕Å Tech Stack
+## 🛠️ Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
@@ -37,7 +37,7 @@ FEDGE 2.O is an educational mobile game for iOS and Android that gamifies the jo
 
 ---
 
-## ≡ƒùé∩╕Å Project Structure
+## 🗂️ Project Structure
 
 ```
 fedge-2-credit-game/
@@ -60,7 +60,7 @@ fedge-2-credit-game/
 
 ---
 
-## ≡ƒÜÇ Getting Started
+## 🚀 Getting Started
 
 ### Prerequisites
 
@@ -95,7 +95,7 @@ npx expo run:android
 
 ---
 
-## ≡ƒôï Roadmap
+## 📋 Roadmap
 
 - [x] Project setup & architecture
 - [ ] Core game engine & credit simulator
@@ -108,13 +108,13 @@ npx expo run:android
 
 ---
 
-## ≡ƒñ¥ Contributing
+## 🤝 Contributing
 
 This project is powered by FEDGE 2.O. For contribution guidelines, see [CONTRIBUTING.md](docs/CONTRIBUTING.md).
 
 ---
 
-## ≡ƒôä License
+## 📄 License
 
 © 2026 FEDGE 2.O. All rights reserved.
 
@@ -160,5 +160,6 @@ Email: **cryptofedge@gmail.com**
 ---
 
 **Learn more:** [Full License](LICENSE)
+
 
 
