@@ -124,8 +124,6 @@ This project is powered by FEDGE 2.O. For contribution guidelines, see [CONTRIBU
 
 <img src="FEDGE-2O-Logo.png" alt="FEDGE 2.O Logo" width="120" height="120">
 
-<img src="FEDGE-2O-Logo.png" alt="FEDGE 2.O Logo" width="120" height="120">
-
 ### FEDGE 2.O | Powered by Rafael Fellito Rodriguez and Eclat Universe
 
 **┬⌐ 2026 FEDGE 2.O. All rights reserved.**
