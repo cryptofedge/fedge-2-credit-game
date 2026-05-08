@@ -1,4 +1,4 @@
-﻿# FEDGE 2.O - Credit Education Mobile Game
+﻿﻿# FEDGE 2.O - Credit Education Mobile Game
 
 > **Learn it. Build it. Own it.** - A mobile game powered by FEDGE 2.O that helps users understand how to build, fix, and maintain their credit score to the highest standard.
 
