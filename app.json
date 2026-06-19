@@ -42,6 +42,9 @@
         }
       ]
     ],
+    "experiments": {
+      "baseUrl": "/fedge-2-credit-game"
+    },
     "extra": {
       "eas": {
         "projectId": "758d2f8a-42ec-4092-8982-96c27638235b"
