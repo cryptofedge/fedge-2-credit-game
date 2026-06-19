@@ -1212,6 +1212,140 @@ function BottomNav({active,go}){
 
 const MAIN=['home','missions','simulator','scenarios','feed','vault'];
 
+const CHAT_SYS=`You are FEDGE Assistant, an expert credit advisor powered by FEDGE 2.O. You help users understand credit scores, fix credit issues, and navigate the FEDGE 2.O credit education game.
+
+Give practical, actionable advice about:
+- FICO score factors: payment history (35%), utilization (30%), length of history (15%), credit mix (10%), new credit (10%)
+- How to dispute errors on credit reports (Equifax, Experian, TransUnion)
+- Credit building strategies (secured cards, credit-builder loans, authorized user status)
+- Debt payoff methods (avalanche vs snowball)
+- How to succeed in FEDGE 2.O game missions — earn FEDGE Coins, raise your credit score, beat THE ALGORITHM boss
+- Real-life credit repair timelines and what actually works
+
+Keep responses concise, warm, and empowering. You believe everyone can fix their credit with the right knowledge.`;
+
+function FedgeChat({gs}){
+  const[open,setOpen]=useState(false);
+  const[apiKey,setApiKey]=useState(()=>localStorage.getItem('fedge_api_key')||'');
+  const[keyInput,setKeyInput]=useState('');
+  const[msgs,setMsgs]=useState([{role:'assistant',content:"Hey! I'm FEDGE Assistant. Ask me anything about credit repair or how to win in the game!"}]);
+  const[input,setInput]=useState('');
+  const[loading,setLoading]=useState(false);
+  const bottomRef=useRef(null);
+
+  useEffect(()=>{if(bottomRef.current)bottomRef.current.scrollIntoView({behavior:'smooth'});},[msgs]);
+
+  async function sendMsg(){
+    if(!input.trim()||loading)return;
+    const userMsg={role:'user',content:input.trim()};
+    const newMsgs=[...msgs,userMsg];
+    setMsgs(newMsgs);
+    setInput('');
+    setLoading(true);
+    try{
+      const history=newMsgs.slice(1).map(m=>({role:m.role,content:m.content}));
+      const res=await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{
+          'x-api-key':apiKey,
+          'anthropic-version':'2023-06-01',
+          'anthropic-dangerous-direct-browser-access':'true',
+          'content-type':'application/json'
+        },
+        body:JSON.stringify({
+          model:'claude-haiku-4-5',
+          max_tokens:512,
+          system:CHAT_SYS,
+          messages:history
+        })
+      });
+      const data=await res.json();
+      if(data.error)throw new Error(data.error.message);
+      const reply=data.content[0].text;
+      setMsgs(m=>[...m,{role:'assistant',content:reply}]);
+    }catch(e){
+      setMsgs(m=>[...m,{role:'assistant',content:`Error: ${e.message}. Check your API key.`}]);
+    }
+    setLoading(false);
+  }
+
+  function saveKey(){
+    if(!keyInput.trim())return;
+    localStorage.setItem('fedge_api_key',keyInput.trim());
+    setApiKey(keyInput.trim());
+    setKeyInput('');
+  }
+
+  const btnStyle={position:'absolute',bottom:90,right:14,width:48,height:48,borderRadius:24,background:`linear-gradient(135deg,${C.primary},${C.gold})`,border:'none',cursor:'pointer',fontSize:22,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:`0 4px 20px rgba(232,112,18,0.5)`,zIndex:200,animation:'pulse 2s ease infinite'};
+
+  const overlayStyle={position:'absolute',inset:0,background:'rgba(6,6,15,0.97)',zIndex:300,display:'flex',flexDirection:'column'};
+
+  return(
+    <>
+      <button style={btnStyle} onClick={()=>setOpen(true)}>💬</button>
+      {open&&(
+        <div style={overlayStyle}>
+          {/* header */}
+          <div style={{background:C.card,borderBottom:`1px solid ${C.border}`,padding:'14px 16px',display:'flex',alignItems:'center',gap:10}}>
+            <div style={{fontSize:26}}>🤖</div>
+            <div style={{flex:1}}>
+              <div style={{color:C.text,fontWeight:800,fontSize:15}}>FEDGE Assistant</div>
+              <div style={{color:C.primary,fontSize:10,fontWeight:600}}>Powered by FEDGE 2.O</div>
+            </div>
+            <button onClick={()=>setOpen(false)} style={{background:'none',border:'none',color:C.sub,fontSize:22,cursor:'pointer',lineHeight:1}}>✕</button>
+          </div>
+
+          {/* api key gate */}
+          {!apiKey?(
+            <div style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:24,gap:14}}>
+              <div style={{fontSize:40}}>🔑</div>
+              <div style={{color:C.text,fontWeight:700,fontSize:16,textAlign:'center'}}>Enter Your Anthropic API Key</div>
+              <div style={{color:C.sub,fontSize:12,textAlign:'center',lineHeight:1.5}}>Your key is stored locally and never sent anywhere except directly to Anthropic.</div>
+              <input value={keyInput} onChange={e=>setKeyInput(e.target.value)} onKeyDown={e=>e.key==='Enter'&&saveKey()} placeholder="sk-ant-..." style={{width:'100%',background:C.card2,border:`1px solid ${C.border}`,borderRadius:10,padding:'10px 14px',color:C.text,fontSize:13,outline:'none'}}/>
+              <button onClick={saveKey} style={{width:'100%',background:`linear-gradient(135deg,${C.primary},${C.gold})`,border:'none',borderRadius:10,padding:'12px',color:'#000',fontWeight:800,fontSize:14,cursor:'pointer'}}>Unlock FEDGE Assistant</button>
+              <a href="https://console.anthropic.com/settings/keys" target="_blank" style={{color:C.blue,fontSize:11}}>Get a free API key →</a>
+            </div>
+          ):(
+            <>
+              {/* messages */}
+              <div style={{flex:1,overflowY:'auto',padding:'12px 14px',display:'flex',flexDirection:'column',gap:10}}>
+                {msgs.map((m,i)=>(
+                  <div key={i} style={{display:'flex',justifyContent:m.role==='user'?'flex-end':'flex-start'}}>
+                    <div style={{maxWidth:'82%',background:m.role==='user'?`linear-gradient(135deg,${C.primary},${C.gold})`:`${C.card2}`,borderRadius:m.role==='user'?'16px 16px 4px 16px':'16px 16px 16px 4px',padding:'9px 13px',color:m.role==='user'?'#000':C.text,fontSize:13,lineHeight:1.5,fontWeight:m.role==='user'?700:400}}>
+                      {m.content}
+                    </div>
+                  </div>
+                ))}
+                {loading&&(
+                  <div style={{display:'flex',justifyContent:'flex-start'}}>
+                    <div style={{background:C.card2,borderRadius:'16px 16px 16px 4px',padding:'9px 13px',color:C.sub,fontSize:13}}>
+                      <span style={{animation:'pulse 1s ease infinite',display:'inline-block'}}>●</span>
+                      <span style={{animation:'pulse 1s ease infinite 0.2s',display:'inline-block'}}>●</span>
+                      <span style={{animation:'pulse 1s ease infinite 0.4s',display:'inline-block'}}>●</span>
+                    </div>
+                  </div>
+                )}
+                <div ref={bottomRef}/>
+              </div>
+              {/* quick tips */}
+              <div style={{padding:'6px 14px',display:'flex',gap:6,overflowX:'auto'}}>
+                {['How to raise my score?','Best credit card tip','Dispute a collection','Game tips'].map(q=>(
+                  <button key={q} onClick={()=>setInput(q)} style={{whiteSpace:'nowrap',background:C.card2,border:`1px solid ${C.border}`,borderRadius:14,padding:'5px 10px',color:C.sub,fontSize:11,cursor:'pointer',flexShrink:0}}>{q}</button>
+                ))}
+              </div>
+              {/* input */}
+              <div style={{padding:'10px 14px 20px',display:'flex',gap:8}}>
+                <input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==='Enter'&&sendMsg()} placeholder="Ask anything about credit..." style={{flex:1,background:C.card2,border:`1px solid ${C.border}`,borderRadius:22,padding:'10px 16px',color:C.text,fontSize:13,outline:'none'}}/>
+                <button onClick={sendMsg} disabled={loading||!input.trim()} style={{width:44,height:44,borderRadius:22,background:input.trim()&&!loading?`linear-gradient(135deg,${C.primary},${C.gold})`:'#1E1E3A',border:'none',cursor:input.trim()?'pointer':'default',fontSize:18,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>➤</button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+    </>
+  );
+}
+
 function App(){
   const[screen,setScreen]=useState('splash');
   const[mission,setMission]=useState(null);
@@ -1247,6 +1381,7 @@ function App(){
           {isMain&&<StatBar gs={gs}/>}
           {gs.pendingEvent&&isMain&&<EventModal event={gs.pendingEvent} dispatch={dispatch} gs={gs}/>}
           {gs.pendingLevelUp&&<LevelUpModal level={gs.pendingLevelUp} dispatch={dispatch}/>}
+          {isMain&&<FedgeChat gs={gs}/>}
         </div>
         {isMain&&<BottomNav active={screen} go={go}/>}
       </div>
