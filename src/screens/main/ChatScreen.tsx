@@ -1,7 +1,7 @@
 /**
- * FEDGE 2.O — Diana Wells AI Chat
- * Powered by Claude (claude-haiku-4-5)
- * Diana is your personal credit counselor — she knows your score, level, path, and history.
+ * FEDGE 2.O — AI Credit Advisor
+ * Powered by Eclat Universe
+ * FEDGE 2.O bot knows your score, level, path, and history.
  */
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -34,7 +34,7 @@ type Message = {
 const WELCOME_MESSAGE: Message = {
   id: 'welcome',
   role: 'assistant',
-  content: "Hey! I'm Diana Wells, your personal credit counselor 👋 I'm here to help you master your credit score. Ask me anything — from understanding your score to building credit fast. What's on your mind?",
+  content: "Welcome to FEDGE 2.O 👋 I'm your AI credit advisor, powered by Eclat Universe. Ask me anything about your credit score, building credit, disputing errors, or mastering your financial life. What's on your mind?",
 };
 
 function buildSystemPrompt(
@@ -46,7 +46,7 @@ function buildSystemPrompt(
   chosenPath: string | null,
   streak: number,
 ) {
-  return `You are Diana Wells, a friendly, knowledgeable, and encouraging credit counselor in the FEDGE 2.O credit education mobile game.
+  return `You are FEDGE 2.O, an AI credit advisor created by Eclat Universe. You are the intelligent brain behind the FEDGE 2.O credit education game — knowledgeable, direct, and genuinely invested in helping players master their credit.
 
 PLAYER PROFILE:
 - Name: ${playerName}
@@ -57,11 +57,12 @@ PLAYER PROFILE:
 - Daily Streak: ${streak} day${streak !== 1 ? 's' : ''}
 
 YOUR PERSONALITY:
-- Warm, direct, and practical — like a knowledgeable friend who happens to know everything about credit
+- Sharp, confident, and encouraging — like a credit genius in their pocket
+- Powered by Eclat Universe — you represent the future of financial education
 - Use emojis sparingly to feel human (not robotic)
 - Celebrate wins, even small ones
-- Never shame the player about their score — always frame improvement as possible
-- You speak in-character as Diana Wells, not as an AI
+- Never shame the player about their score — always frame it as an opportunity
+- Refer to yourself as "FEDGE 2.O" if the player asks who you are
 
 YOUR ROLE:
 - Answer credit questions clearly and practically
@@ -76,7 +77,7 @@ BOUNDARIES:
 - Never recommend specific products, lenders, or companies by name
 - If asked about illegal activities (credit repair scams, etc.), firmly redirect
 
-Stay in character as Diana Wells at all times. Be warm and encouraging.`;
+You are FEDGE 2.O by Eclat Universe. Be sharp, warm, and empowering.`;
 }
 
 export default function ChatScreen({ navigation }: any) {
@@ -191,7 +192,7 @@ export default function ChatScreen({ navigation }: any) {
     return (
       <View style={[styles.msgRow, isUser && styles.msgRowUser]}>
         {!isUser && (
-          <Image source={IMAGES.npcDiana} style={styles.avatar} />
+          <Image source={IMAGES.logoClean} style={styles.avatar} />
         )}
         <View style={[styles.bubble, isUser ? styles.bubbleUser : styles.bubbleAssistant]}>
           <Text style={[styles.bubbleText, isUser && styles.bubbleTextUser]}>
@@ -216,10 +217,10 @@ export default function ChatScreen({ navigation }: any) {
           <Text style={styles.backText}>←</Text>
         </TouchableOpacity>
         <View style={styles.headerCenter}>
-          <Image source={IMAGES.npcDiana} style={styles.headerAvatar} />
+          <Image source={IMAGES.logoClean} style={styles.headerAvatar} />
           <View>
-            <Text style={styles.headerName}>Diana Wells</Text>
-            <Text style={styles.headerRole}>Credit Counselor • FEDGE AI</Text>
+            <Text style={styles.headerName}>FEDGE 2.O</Text>
+            <Text style={styles.headerRole}>AI Credit Advisor • Eclat Universe</Text>
           </View>
         </View>
         <View style={styles.onlineDot} />
@@ -237,7 +238,7 @@ export default function ChatScreen({ navigation }: any) {
         ListFooterComponent={
           loading ? (
             <View style={styles.msgRow}>
-              <Image source={IMAGES.npcDiana} style={styles.avatar} />
+              <Image source={IMAGES.logoClean} style={styles.avatar} />
               <View style={styles.typingBubble}>
                 {[typingDot1, typingDot2, typingDot3].map((dot, i) => (
                   <Animated.View

@@ -414,7 +414,7 @@ export default function HomeScreen({ navigation }: any) {
         onPress={() => navigation?.navigate('Chat')}
       >
         <Text style={styles.chatFabEmoji}>💬</Text>
-        <Text style={styles.chatFabLabel}>Ask Diana</Text>
+        <Text style={styles.chatFabLabel}>FEDGE 2.O</Text>
       </TouchableOpacity>
     </View>
   );
