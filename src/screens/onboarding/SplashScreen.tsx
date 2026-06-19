@@ -99,8 +99,8 @@ const styles = StyleSheet.create({
     gap: SPACING.sm,
   },
   logoImage: {
-    width: 180,
-    height: 180,
+    width: 260,
+    height: 260,
   },
   logoTextRow: {
     flexDirection: 'row',

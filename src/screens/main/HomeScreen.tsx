@@ -39,7 +39,7 @@ import { getScoreTier } from '@utils/creditScore';
 import { BUREAUS } from '@constants/gameConfig';
 
 const { width } = Dimensions.get('window');
-const FEDGE_LOGO = require('@assets/images/logo.png');
+const FEDGE_LOGO = require('@assets/images/logo-clean.png');
 
 const DAILY_MISSIONS = [
   {

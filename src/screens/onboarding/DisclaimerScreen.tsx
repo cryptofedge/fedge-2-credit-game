@@ -22,7 +22,7 @@ import { COLORS, FONTS, SPACING, RADIUS, SHADOWS } from '@constants/theme';
 import { OnboardingStackParamList } from '@navigation/OnboardingNavigator';
 
 const { width, height } = Dimensions.get('window');
-const FEDGE_LOGO = require('@assets/images/logo.png');
+const FEDGE_LOGO = require('@assets/images/logo-clean.png');
 
 type Props = {
   navigation: NativeStackNavigationProp<OnboardingStackParamList, 'Disclaimer'>;
