@@ -22,9 +22,11 @@ import {
   Animated,
   StatusBar,
   Dimensions,
+  Image,
 } from 'react-native';
 import { COLORS, FONTS, SPACING, RADIUS, SHADOWS } from '@constants/theme';
 import { useGameStore } from '@store/gameStore';
+import { IMAGES } from '@assets/index';
 import { XP } from '@constants/gameConfig';
 import ScoreGauge from '@components/animations/ScoreGauge';
 import ParticleBurst, { ParticleBurstRef } from '@components/animations/ParticleBurst';
@@ -355,7 +357,24 @@ export default function ScenarioScreen({ navigation, route }: Props) {
 
             {/* Situation header */}
             <View style={styles.situationCard}>
-              <Text style={styles.situationEmoji}>{scenario.situationEmoji}</Text>
+              {/* NPC portrait strip — Marcus for negative/debt scenarios, Diana for learning */}
+              {(() => {
+                const isMarcus = scenario.choices.some((c) => c.scoreChange < -20);
+                return (
+                  <View style={styles.npcStrip}>
+                    <Image
+                      source={isMarcus ? IMAGES.npcMarcus : IMAGES.npcDiana}
+                      style={styles.npcPortrait}
+                      resizeMode="cover"
+                    />
+                    <View style={styles.npcInfo}>
+                      <Text style={styles.npcName}>{isMarcus ? 'Marcus Reed' : 'Diana Wells'}</Text>
+                      <Text style={styles.npcRole}>{isMarcus ? 'Debt Collector' : 'Credit Counselor'}</Text>
+                    </View>
+                    <Text style={styles.situationEmoji}>{scenario.situationEmoji}</Text>
+                  </View>
+                );
+              })()}
               <Text style={styles.situationTitle}>{scenario.title}</Text>
               <Text style={styles.situationText}>{scenario.situation}</Text>
               <Text style={styles.contextText}>{scenario.context}</Text>
@@ -559,8 +578,28 @@ const styles = StyleSheet.create({
     padding: SPACING.lg,
     borderWidth: 1, borderColor: COLORS.border,
     marginBottom: SPACING.md,
+    overflow: 'hidden',
   },
-  situationEmoji: { fontSize: 48, marginBottom: SPACING.sm },
+  npcStrip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.sm,
+    marginBottom: SPACING.md,
+    paddingBottom: SPACING.md,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  npcPortrait: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 2,
+    borderColor: COLORS.primary + '60',
+  },
+  npcInfo: { flex: 1 },
+  npcName: { fontSize: FONTS.sizes.sm, fontWeight: '800', color: COLORS.textPrimary },
+  npcRole: { fontSize: FONTS.sizes.xs, color: COLORS.textMuted },
+  situationEmoji: { fontSize: 36 },
   situationTitle: { fontSize: FONTS.sizes.xxl, fontWeight: '900', color: COLORS.textPrimary, marginBottom: SPACING.xs },
   situationText: { fontSize: FONTS.sizes.md, color: COLORS.primary, fontWeight: '700', marginBottom: SPACING.sm },
   contextText: { fontSize: FONTS.sizes.sm, color: COLORS.textSecondary, lineHeight: 22 },

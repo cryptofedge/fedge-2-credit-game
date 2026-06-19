@@ -1,10 +1,3 @@
-/**
- * FEDGE 2.O — Hero Intro Screen
- * "Your Credit Score is Your Superpower"
- * Animated number counter. Sets stakes. Creates emotional hook.
- * Inspired by: RPG opening cinematics, Duolingo "Let's start" energy
- */
-
 import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
@@ -14,10 +7,12 @@ import {
   TouchableOpacity,
   Dimensions,
   StatusBar,
+  Image,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS, FONTS, SPACING, RADIUS, SHADOWS } from '@constants/theme';
 import { OnboardingStackParamList } from '@navigation/OnboardingNavigator';
+import { IMAGES } from '@assets/index';
 
 const { width, height } = Dimensions.get('window');
 
@@ -33,7 +28,7 @@ const STATS = [
 
 export default function HeroIntroScreen({ navigation }: Props) {
   const [displayScore, setDisplayScore] = useState(300);
-  const [phase, setPhase] = useState(0); // 0=counting, 1=showing stats, 2=cta
+  const [phase, setPhase] = useState(0);
 
   const headerOpacity = useRef(new Animated.Value(0)).current;
   const scoreOpacity = useRef(new Animated.Value(0)).current;
@@ -43,10 +38,11 @@ export default function HeroIntroScreen({ navigation }: Props) {
   const ctaTranslateY = useRef(new Animated.Value(30)).current;
   const ringScale = useRef(new Animated.Value(0)).current;
   const ringOpacity = useRef(new Animated.Value(0)).current;
+  const heroOpacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Phase 1: Header + score count up
     Animated.sequence([
+      Animated.timing(heroOpacity, { toValue: 1, duration: 700, useNativeDriver: true }),
       Animated.timing(headerOpacity, { toValue: 1, duration: 600, useNativeDriver: true }),
       Animated.delay(200),
       Animated.parallel([
@@ -56,7 +52,6 @@ export default function HeroIntroScreen({ navigation }: Props) {
         Animated.timing(ringOpacity, { toValue: 1, duration: 600, useNativeDriver: true }),
       ]),
     ]).start(() => {
-      // Count up from 300 → 850
       let start = 300;
       const end = 850;
       const duration = 2000;
@@ -71,7 +66,6 @@ export default function HeroIntroScreen({ navigation }: Props) {
           clearInterval(timer);
           setPhase(1);
 
-          // Show stats
           Animated.sequence([
             Animated.delay(300),
             Animated.timing(statsOpacity, { toValue: 1, duration: 500, useNativeDriver: true }),
@@ -101,6 +95,32 @@ export default function HeroIntroScreen({ navigation }: Props) {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.bg} />
 
+      {/* Hero character cinematic banner */}
+      <Animated.View style={[styles.heroBannerWrap, { opacity: heroOpacity }]}>
+        <Image source={IMAGES.hero} style={styles.heroBanner} resizeMode="cover" />
+        <View style={styles.heroBannerOverlay} />
+
+        {/* Score ring overlaid on hero image */}
+        <Animated.View
+          style={[
+            styles.scoreRingOuter,
+            {
+              opacity: ringOpacity,
+              transform: [{ scale: ringScale }],
+              borderColor: scoreColor,
+              shadowColor: scoreColor,
+            },
+          ]}
+        >
+          <View style={[styles.scoreRingInner, { borderColor: scoreColor + '40' }]}>
+            <Animated.View style={{ opacity: scoreOpacity, transform: [{ scale: scoreScale }] }}>
+              <Text style={[styles.scoreNumber, { color: scoreColor }]}>{displayScore}</Text>
+              <Text style={styles.scoreLabel}>CREDIT SCORE</Text>
+            </Animated.View>
+          </View>
+        </Animated.View>
+      </Animated.View>
+
       {/* Header */}
       <Animated.View style={[styles.header, { opacity: headerOpacity }]}>
         <Text style={styles.eyebrow}>YOUR CREDIT SCORE IS</Text>
@@ -109,26 +129,6 @@ export default function HeroIntroScreen({ navigation }: Props) {
           Master it and unlock a life of better rates,{'\n'}
           more opportunities, and real freedom.
         </Text>
-      </Animated.View>
-
-      {/* Score Ring */}
-      <Animated.View
-        style={[
-          styles.scoreRingOuter,
-          {
-            opacity: ringOpacity,
-            transform: [{ scale: ringScale }],
-            borderColor: scoreColor,
-            shadowColor: scoreColor,
-          },
-        ]}
-      >
-        <View style={[styles.scoreRingInner, { borderColor: scoreColor + '40' }]}>
-          <Animated.View style={{ opacity: scoreOpacity, transform: [{ scale: scoreScale }] }}>
-            <Text style={[styles.scoreNumber, { color: scoreColor }]}>{displayScore}</Text>
-            <Text style={styles.scoreLabel}>CREDIT SCORE</Text>
-          </Animated.View>
-        </View>
       </Animated.View>
 
       {/* Social proof stats */}
@@ -167,13 +167,66 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.bg,
     alignItems: 'center',
-    paddingTop: 60,
     paddingBottom: 40,
     paddingHorizontal: SPACING.lg,
   },
+  heroBannerWrap: {
+    width: width + SPACING.lg * 2,
+    height: height * 0.32,
+    marginHorizontal: -SPACING.lg,
+    marginBottom: SPACING.lg,
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    paddingBottom: SPACING.xl,
+  },
+  heroBanner: {
+    ...StyleSheet.absoluteFillObject,
+    width: '100%',
+    height: '100%',
+  },
+  heroBannerOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: COLORS.bg,
+    opacity: 0.35,
+  },
+  scoreRingOuter: {
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    borderWidth: 3,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.9,
+    shadowRadius: 20,
+    elevation: 12,
+    backgroundColor: COLORS.bg + 'CC',
+  },
+  scoreRingInner: {
+    width: 116,
+    height: 116,
+    borderRadius: 58,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.bgCard,
+  },
+  scoreNumber: {
+    fontSize: 42,
+    fontWeight: '900',
+    textAlign: 'center',
+  },
+  scoreLabel: {
+    fontSize: FONTS.sizes.xs,
+    color: COLORS.textMuted,
+    letterSpacing: 2,
+    textAlign: 'center',
+    marginTop: 2,
+  },
   header: {
     alignItems: 'center',
-    marginBottom: SPACING.xl,
+    marginBottom: SPACING.lg,
   },
   eyebrow: {
     fontSize: FONTS.sizes.xs,
@@ -187,7 +240,7 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     color: COLORS.textPrimary,
     textAlign: 'center',
-    marginBottom: SPACING.md,
+    marginBottom: SPACING.sm,
   },
   subheadline: {
     fontSize: FONTS.sizes.md,
@@ -195,44 +248,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 22,
   },
-  scoreRingOuter: {
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    borderWidth: 4,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: SPACING.xl,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 24,
-    elevation: 12,
-  },
-  scoreRingInner: {
-    width: 170,
-    height: 170,
-    borderRadius: 85,
-    borderWidth: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: COLORS.bgCard,
-  },
-  scoreNumber: {
-    fontSize: FONTS.sizes.hero,
-    fontWeight: '900',
-    textAlign: 'center',
-  },
-  scoreLabel: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-    letterSpacing: 2,
-    textAlign: 'center',
-    marginTop: 2,
-  },
   statsRow: {
     flexDirection: 'row',
     gap: SPACING.sm,
-    marginBottom: SPACING.xl,
+    marginBottom: SPACING.lg,
   },
   statCard: {
     flex: 1,

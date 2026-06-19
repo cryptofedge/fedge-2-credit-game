@@ -1,9 +1,3 @@
-/**
- * FEDGE 2.O — Splash Screen
- * Cinematic logo reveal. Sets the tone: premium, powerful, exciting.
- * Inspired by: Clash of Clans intro, Candy Crush splash energy
- */
-
 import React, { useEffect, useRef } from 'react';
 import {
   View,
@@ -17,118 +11,56 @@ import {
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { COLORS, FONTS, SPACING } from '@constants/theme';
 import { OnboardingStackParamList } from '@navigation/OnboardingNavigator';
+import { IMAGES } from '@assets/index';
 
-const FEDGE_LOGO = require('@assets/images/logo.png');
-
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 type Props = {
   navigation: NativeStackNavigationProp<OnboardingStackParamList, 'Splash'>;
 };
 
 export default function SplashScreen({ navigation }: Props) {
-  const logoScale = useRef(new Animated.Value(0)).current;
   const logoOpacity = useRef(new Animated.Value(0)).current;
+  const logoTranslateY = useRef(new Animated.Value(20)).current;
   const taglineOpacity = useRef(new Animated.Value(0)).current;
-  const glowOpacity = useRef(new Animated.Value(0)).current;
-  const glowScale = useRef(new Animated.Value(0.5)).current;
   const subtitleOpacity = useRef(new Animated.Value(0)).current;
-
-  // Particle positions
-  const particles = Array.from({ length: 12 }, (_, i) => ({
-    opacity: useRef(new Animated.Value(0)).current,
-    translateY: useRef(new Animated.Value(0)).current,
-    translateX: useRef(new Animated.Value((i % 2 === 0 ? 1 : -1) * Math.random() * width * 0.4)).current,
-  }));
+  const barWidth = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Step 1: Glow pulse in
     Animated.sequence([
-      Animated.delay(200),
-      Animated.parallel([
-        Animated.timing(glowOpacity, { toValue: 1, duration: 600, useNativeDriver: true }),
-        Animated.timing(glowScale, { toValue: 1.5, duration: 800, useNativeDriver: true }),
-      ]),
-
-      // Step 2: Logo slams in
-      Animated.parallel([
-        Animated.spring(logoScale, { toValue: 1, tension: 80, friction: 6, useNativeDriver: true }),
-        Animated.timing(logoOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
-      ]),
-
-      // Step 3: Tagline fades in
       Animated.delay(300),
-      Animated.timing(taglineOpacity, { toValue: 1, duration: 500, useNativeDriver: true }),
-
-      // Step 4: Particles shoot up
+      Animated.parallel([
+        Animated.timing(logoOpacity, { toValue: 1, duration: 600, useNativeDriver: true }),
+        Animated.timing(logoTranslateY, { toValue: 0, duration: 600, useNativeDriver: true }),
+      ]),
       Animated.delay(200),
+      Animated.timing(taglineOpacity, { toValue: 1, duration: 500, useNativeDriver: true }),
+      Animated.delay(150),
+      Animated.timing(subtitleOpacity, { toValue: 1, duration: 400, useNativeDriver: true }),
     ]).start(() => {
-      // Animate particles
-      particles.forEach((p, i) => {
-        Animated.sequence([
-          Animated.delay(i * 60),
-          Animated.parallel([
-            Animated.timing(p.opacity, { toValue: 1, duration: 200, useNativeDriver: true }),
-            Animated.timing(p.translateY, { toValue: -height * 0.5, duration: 1200, useNativeDriver: true }),
-          ]),
-          Animated.timing(p.opacity, { toValue: 0, duration: 300, useNativeDriver: true }),
-        ]).start();
-      });
-
-      // Subtitle
-      Animated.sequence([
-        Animated.delay(400),
-        Animated.timing(subtitleOpacity, { toValue: 1, duration: 500, useNativeDriver: true }),
-      ]).start();
-
-      // Auto-navigate after 3 seconds
-      setTimeout(() => {
-        navigation.replace('Disclaimer');
-      }, 3200);
+      setTimeout(() => navigation.replace('Disclaimer'), 1800);
     });
+
+    Animated.timing(barWidth, {
+      toValue: width * 0.5,
+      duration: 2800,
+      delay: 400,
+      useNativeDriver: false,
+    }).start();
   }, []);
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.bg} />
 
-      {/* Glow blob */}
-      <Animated.View
-        style={[
-          styles.glow,
-          { opacity: glowOpacity, transform: [{ scale: glowScale }] },
-        ]}
-      />
-
-      {/* Particles */}
-      {particles.map((p, i) => (
-        <Animated.View
-          key={i}
-          style={[
-            styles.particle,
-            {
-              opacity: p.opacity,
-              transform: [
-                { translateX: p.translateX },
-                { translateY: p.translateY },
-              ],
-            },
-          ]}
-        />
-      ))}
-
-      {/* Logo Image */}
       <Animated.View
         style={[
           styles.logoContainer,
-          {
-            opacity: logoOpacity,
-            transform: [{ scale: logoScale }],
-          },
+          { opacity: logoOpacity, transform: [{ translateY: logoTranslateY }] },
         ]}
       >
         <Image
-          source={FEDGE_LOGO}
+          source={IMAGES.logoClean}
           style={styles.logoImage}
           resizeMode="contain"
         />
@@ -140,24 +72,16 @@ export default function SplashScreen({ navigation }: Props) {
         </View>
       </Animated.View>
 
-      {/* Tagline */}
       <Animated.Text style={[styles.tagline, { opacity: taglineOpacity }]}>
         Credit Education Game
       </Animated.Text>
 
-      {/* Subtitle */}
       <Animated.Text style={[styles.subtitle, { opacity: subtitleOpacity }]}>
         Learn it. Build it. Own it.
       </Animated.Text>
 
-      {/* Bottom bar */}
       <View style={styles.loadingBar}>
-        <Animated.View
-          style={[
-            styles.loadingFill,
-            { width: logoOpacity.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] }) },
-          ]}
-        />
+        <Animated.View style={[styles.loadingFill, { width: barWidth }]} />
       </View>
     </View>
   );
@@ -170,28 +94,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  glow: {
-    position: 'absolute',
-    width: 300,
-    height: 300,
-    borderRadius: 150,
-    backgroundColor: COLORS.primaryGlow,
-  },
-  particle: {
-    position: 'absolute',
-    bottom: height * 0.3,
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: COLORS.secondary,
-  },
   logoContainer: {
     alignItems: 'center',
     gap: SPACING.sm,
   },
   logoImage: {
-    width: 140,
-    height: 140,
+    width: 180,
+    height: 180,
   },
   logoTextRow: {
     flexDirection: 'row',
@@ -206,7 +115,7 @@ const styles = StyleSheet.create({
   },
   versionBadge: {
     backgroundColor: COLORS.primary,
-    borderRadius: SPACING.xs,
+    borderRadius: 6,
     paddingHorizontal: SPACING.sm,
     paddingVertical: SPACING.xs,
     marginTop: SPACING.sm,

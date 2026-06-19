@@ -1,13 +1,3 @@
-/**
- * FEDGE 2.O — Missions Hub
- * Shows all missions: completed, available, and locked.
- * Addictive hooks:
- * - Progress rings showing how close user is to unlocking next mission
- * - XP/coin rewards front-loaded on the card to create anticipation
- * - Lock animation on locked missions (visual scarcity)
- * - "Coming Soon" teasers to build desire
- */
-
 import React, { useRef, useEffect } from 'react';
 import {
   View,
@@ -17,14 +7,14 @@ import {
   TouchableOpacity,
   Animated,
   StatusBar,
+  Image,
+  ImageSourcePropType,
 } from 'react-native';
 import { COLORS, FONTS, SPACING, RADIUS, SHADOWS } from '@constants/theme';
 import { useGameStore } from '@store/gameStore';
 import { XP, FEDGE_COINS } from '@constants/gameConfig';
+import { IMAGES } from '@assets/index';
 
-// ─────────────────────────────────────────────
-// Mission definitions
-// ─────────────────────────────────────────────
 const MISSIONS = [
   {
     id: 'mission_1_five_factors',
@@ -33,6 +23,9 @@ const MISSIONS = [
     subtitle: 'Master the FICO formula',
     description: 'Learn exactly what determines your credit score and how each factor impacts it.',
     icon: '🎯',
+    npcImage: IMAGES.npcDiana,
+    npcName: 'Diana Wells',
+    npcRole: 'Credit Counselor',
     color: COLORS.primary,
     glowColor: COLORS.primaryGlow,
     xpReward: 450,
@@ -49,6 +42,9 @@ const MISSIONS = [
     subtitle: 'The fastest score booster',
     description: 'The secret weapon most people ignore. Learn how to use credit utilization to add 40+ points fast.',
     icon: '💳',
+    npcImage: IMAGES.npcPriya,
+    npcName: 'Priya Singh',
+    npcRole: 'Mortgage Officer',
     color: COLORS.secondary,
     glowColor: COLORS.secondary + '40',
     xpReward: 500,
@@ -65,6 +61,9 @@ const MISSIONS = [
     subtitle: 'Remove errors from your report',
     description: '79% of credit reports have errors. Learn how to find them and dispute them for free.',
     icon: '⚖️',
+    npcImage: IMAGES.npcMarcus,
+    npcName: 'Marcus Reed',
+    npcRole: 'Debt Collector',
     color: COLORS.accent,
     glowColor: COLORS.accent + '40',
     xpReward: 600,
@@ -81,6 +80,9 @@ const MISSIONS = [
     subtitle: 'Secured cards & AU strategy',
     description: 'The proven 90-day blueprint to go from no credit to a 680+ score.',
     icon: '🏗️',
+    npcImage: null,
+    npcName: null,
+    npcRole: null,
     color: COLORS.success,
     glowColor: COLORS.success + '40',
     xpReward: 700,
@@ -97,6 +99,9 @@ const MISSIONS = [
     subtitle: 'Elite credit strategies',
     description: 'What separates a 750 from an 800. The exact moves to join the credit elite.',
     icon: '🏆',
+    npcImage: IMAGES.npcAlgorithm,
+    npcName: 'The Algorithm',
+    npcRole: 'Final Boss',
     color: COLORS.warning,
     glowColor: COLORS.warning + '40',
     xpReward: 1000,
@@ -108,9 +113,6 @@ const MISSIONS = [
   },
 ];
 
-// ─────────────────────────────────────────────
-// Mission Card
-// ─────────────────────────────────────────────
 function MissionCard({
   mission,
   isCompleted,
@@ -138,7 +140,6 @@ function MissionCard({
       }),
     ]).start();
 
-    // Pulse glow for available mission
     if (isUnlocked && !isCompleted) {
       Animated.loop(
         Animated.sequence([
@@ -161,20 +162,27 @@ function MissionCard({
         onPress={onPress}
         activeOpacity={isUnlocked ? 0.85 : 0.6}
       >
-        {/* Glow overlay for unlocked */}
         {isUnlocked && !isCompleted && (
           <View style={[styles.cardGlow, { backgroundColor: mission.color + '08' }]} />
         )}
 
-        {/* Left: icon circle */}
+        {/* Left: NPC portrait or icon */}
         <View style={[
           styles.missionIconWrap,
           { backgroundColor: isUnlocked ? mission.color + '20' : COLORS.bgCardAlt },
           isCompleted && { backgroundColor: COLORS.success + '20' },
         ]}>
-          <Text style={styles.missionIcon}>
-            {isCompleted ? '✅' : isUnlocked ? mission.icon : '🔒'}
-          </Text>
+          {mission.npcImage && isUnlocked && !isCompleted ? (
+            <Image
+              source={mission.npcImage as ImageSourcePropType}
+              style={styles.npcPortrait}
+              resizeMode="cover"
+            />
+          ) : (
+            <Text style={styles.missionIcon}>
+              {isCompleted ? '✅' : isUnlocked ? mission.icon : '🔒'}
+            </Text>
+          )}
         </View>
 
         {/* Center: info */}
@@ -199,9 +207,12 @@ function MissionCard({
           ]}>
             {mission.title}
           </Text>
+          {mission.npcName && isUnlocked && (
+            <Text style={[styles.npcLabel, { color: mission.color }]}>
+              with {mission.npcName}
+            </Text>
+          )}
           <Text style={styles.missionSubtitle}>{mission.subtitle}</Text>
-
-          {/* Rewards + meta */}
           <View style={styles.missionMeta}>
             <View style={styles.metaPill}>
               <Text style={styles.metaPillText}>⏱ {mission.duration}</Text>
@@ -215,7 +226,6 @@ function MissionCard({
           </View>
         </View>
 
-        {/* Right: chevron or lock */}
         {isUnlocked && (
           <Text style={[styles.chevron, { color: isCompleted ? COLORS.success : mission.color }]}>
             {isCompleted ? '↩' : '→'}
@@ -226,9 +236,6 @@ function MissionCard({
   );
 }
 
-// ─────────────────────────────────────────────
-// Main Screen
-// ─────────────────────────────────────────────
 export default function MissionsListScreen({ navigation }: any) {
   const completedModules = useGameStore((s) => s.completedModules);
   const xp = useGameStore((s) => s.xp);
@@ -252,7 +259,6 @@ export default function MissionsListScreen({ navigation }: any) {
     if (mission.screen) {
       navigation.navigate(mission.screen);
     }
-    // Coming soon missions — do nothing (or show a toast in future)
   };
 
   return (
@@ -265,18 +271,13 @@ export default function MissionsListScreen({ navigation }: any) {
           <Text style={styles.headerLabel}>YOUR JOURNEY</Text>
           <Text style={styles.headerTitle}>Missions</Text>
 
-          {/* Overall progress bar */}
           <View style={styles.overallProgress}>
             <View style={styles.progressTrack}>
-              <Animated.View style={[
-                styles.progressFill,
-                { width: `${progressPct * 100}%` },
-              ]} />
+              <Animated.View style={[styles.progressFill, { width: `${progressPct * 100}%` }]} />
             </View>
             <Text style={styles.progressText}>{totalCompleted}/{MISSIONS.length} complete</Text>
           </View>
 
-          {/* Stats row */}
           <View style={styles.statsRow}>
             <View style={styles.statBox}>
               <Text style={styles.statValue}>{totalCompleted}</Text>
@@ -294,6 +295,26 @@ export default function MissionsListScreen({ navigation }: any) {
             </View>
           </View>
         </Animated.View>
+
+        {/* ── CHARACTER ROSTER ───────────────── */}
+        <View style={styles.rosterWrap}>
+          <Text style={styles.rosterLabel}>CHARACTERS</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.rosterRow}>
+            {[
+              { image: IMAGES.hero, name: 'You', role: 'Hero' },
+              { image: IMAGES.npcDiana, name: 'Diana', role: 'Counselor' },
+              { image: IMAGES.npcPriya, name: 'Priya', role: 'Mortgage' },
+              { image: IMAGES.npcMarcus, name: 'Marcus', role: 'Collector' },
+              { image: IMAGES.npcAlgorithm, name: 'Algorithm', role: 'Boss' },
+            ].map((char, i) => (
+              <View key={i} style={styles.rosterCard}>
+                <Image source={char.image} style={styles.rosterImage} resizeMode="cover" />
+                <Text style={styles.rosterName}>{char.name}</Text>
+                <Text style={styles.rosterRole}>{char.role}</Text>
+              </View>
+            ))}
+          </ScrollView>
+        </View>
 
         {/* ── MISSION LIST ───────────────────── */}
         <View style={styles.missionList}>
@@ -340,7 +361,7 @@ export default function MissionsListScreen({ navigation }: any) {
           <Text style={[styles.chevron, { color: COLORS.accent }]}>→</Text>
         </TouchableOpacity>
 
-        {/* ── COMING SOON TEASER ─────────────── */}
+        {/* ── COMING SOON ────────────────────── */}
         <View style={styles.comingSoon}>
           <Text style={styles.comingSoonEmoji}>🚀</Text>
           <Text style={styles.comingSoonTitle}>More missions coming soon</Text>
@@ -354,14 +375,10 @@ export default function MissionsListScreen({ navigation }: any) {
   );
 }
 
-// ─────────────────────────────────────────────
-// Styles
-// ─────────────────────────────────────────────
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.bg },
   scroll: { paddingBottom: 40 },
 
-  // Header
   header: {
     paddingHorizontal: SPACING.lg,
     paddingTop: 60,
@@ -384,7 +401,6 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.lg,
   },
 
-  // Overall progress
   overallProgress: { gap: SPACING.xs, marginBottom: SPACING.lg },
   progressTrack: {
     height: 8,
@@ -403,7 +419,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 
-  // Stats
   statsRow: {
     flexDirection: 'row',
     backgroundColor: COLORS.bgCard,
@@ -419,13 +434,52 @@ const styles = StyleSheet.create({
   statLabel: { fontSize: FONTS.sizes.xs, color: COLORS.textMuted, marginTop: 2 },
   statDivider: { width: 1, height: 32, backgroundColor: COLORS.border },
 
-  // Mission list
+  // Character roster
+  rosterWrap: {
+    paddingTop: SPACING.md,
+    paddingBottom: SPACING.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+    marginBottom: SPACING.md,
+  },
+  rosterLabel: {
+    fontSize: FONTS.sizes.xs,
+    color: COLORS.textMuted,
+    fontWeight: '800',
+    letterSpacing: 2,
+    paddingHorizontal: SPACING.lg,
+    marginBottom: SPACING.sm,
+  },
+  rosterRow: {
+    paddingHorizontal: SPACING.lg,
+    gap: SPACING.md,
+  },
+  rosterCard: {
+    alignItems: 'center',
+    gap: 4,
+  },
+  rosterImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    borderWidth: 2,
+    borderColor: COLORS.border,
+  },
+  rosterName: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: COLORS.textPrimary,
+  },
+  rosterRole: {
+    fontSize: 9,
+    color: COLORS.textMuted,
+  },
+
   missionList: {
     paddingHorizontal: SPACING.lg,
     gap: SPACING.md,
   },
 
-  // Mission card
   missionCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -449,12 +503,17 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.xl,
   },
   missionIconWrap: {
-    width: 56,
-    height: 56,
+    width: 60,
+    height: 60,
     borderRadius: RADIUS.lg,
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
+    overflow: 'hidden',
+  },
+  npcPortrait: {
+    width: 60,
+    height: 60,
   },
   missionIcon: { fontSize: 28 },
 
@@ -488,13 +547,17 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     color: COLORS.textPrimary,
   },
+  npcLabel: {
+    fontSize: FONTS.sizes.xs,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
   missionSubtitle: {
     fontSize: FONTS.sizes.xs,
     color: COLORS.textMuted,
     marginBottom: SPACING.sm,
   },
 
-  // Meta pills
   missionMeta: { flexDirection: 'row', gap: SPACING.xs, flexWrap: 'wrap' },
   metaPill: {
     backgroundColor: COLORS.bgCardAlt,
@@ -513,11 +576,11 @@ const styles = StyleSheet.create({
     paddingRight: SPACING.xs,
   },
 
-  // Scenario card
   scenarioCard: {
     flexDirection: 'row',
     alignItems: 'center',
     marginHorizontal: SPACING.lg,
+    marginTop: SPACING.md,
     marginBottom: SPACING.md,
     backgroundColor: COLORS.bgCard,
     borderRadius: RADIUS.xl,
@@ -552,7 +615,6 @@ const styles = StyleSheet.create({
   },
   scenarioPillText: { fontSize: 10, fontWeight: '700', color: COLORS.textMuted },
 
-  // Coming soon
   comingSoon: {
     marginTop: SPACING.xl,
     marginHorizontal: SPACING.lg,
