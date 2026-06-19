@@ -289,10 +289,17 @@ export default function ChatScreen({ navigation }: any) {
     }
   };
 
-  // Speak welcome message on mount
+  // Speak welcome message once on mount (speakRef avoids re-triggering when muted toggles)
+  const speakRef = useRef(speak);
+  speakRef.current = speak;
   useEffect(() => {
-    const timer = setTimeout(() => speak(WELCOME_MESSAGE.content), 800);
-    return () => clearTimeout(timer);
+    const timer = setTimeout(() => speakRef.current(WELCOME_MESSAGE.content), 800);
+    return () => {
+      clearTimeout(timer);
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    };
   }, []);
 
   const renderMessage = ({ item }: { item: Message }) => {

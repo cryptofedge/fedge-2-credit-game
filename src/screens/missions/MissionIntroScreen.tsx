@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
   glow: {
     position: 'absolute', bottom: -200, right: -100,
     width: 500, height: 500, borderRadius: 250,
-    filter: [{ blur: 80 }] as any,
+    opacity: 0.12,
   },
   npcContainer: {
     position: 'absolute', right: -40, bottom: 0,
@@ -238,8 +238,9 @@ const styles = StyleSheet.create({
   },
   npcImage: { width: '100%', height: '100%' },
   npcGradient: {
-    ...StyleSheet.absoluteFillObject,
-  } as any,
+    position: 'absolute', top: 0, left: 0, bottom: 0, width: '50%',
+    backgroundColor: '#050510',
+  },
   scanLine: {
     position: 'absolute', left: 0, right: 0,
     height: 2, backgroundColor: COLORS.primary,
