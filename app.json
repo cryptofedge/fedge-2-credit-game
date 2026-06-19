@@ -23,7 +23,11 @@
       "package": "com.fedge2.creditgame"
     },
     "web": {
-      "favicon": "./src/assets/images/favicon.png"
+      "favicon": "./src/assets/images/favicon.png",
+      "bundler": "metro",
+      "output": "static",
+      "name": "FEDGE 2.O",
+      "description": "Master your credit score. The RPG way."
     },
     "plugins": [
       [
