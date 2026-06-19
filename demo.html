@@ -268,7 +268,7 @@ const VAULT_ITEMS=[
 ];
 
 const initState={
-  playerName:'Ghost',avatar:'👻',level:3,xp:1250,xpMax:2000,
+  playerName:'Ghost',avatar:'👻',playerPhoto:null,level:3,xp:1250,xpMax:2000,
   creditScore:720,coins:450,
   day:1,actionCount:0,streak:7,lastLogin:Date.now(),
   completedMissions:[],completedScenarios:[],
@@ -303,8 +303,22 @@ function reducer(state,action){
     case'COMPLETE_SCENARIO':return{...state,completedScenarios:[...state.completedScenarios,action.id]};
     case'UNLOCK_VAULT':return{...state,unlockedVault:[...state.unlockedVault,action.id]};
     case'NPC_TALKED':return{...state,npcTalked:[...state.npcTalked,action.id]};
+    case'SET_PLAYER':return{...state,playerName:action.name,avatar:action.avatar,playerPhoto:action.photo||null};
+    case'BATTLE_WIN':return{...state,xp:state.xp+action.xp,coins:state.coins+action.coins,creditScore:Math.min(850,state.creditScore+action.scoreChange)};
     default:return state;
   }
+}
+
+const HIGGSFIELD_APPS={
+  game_dump:'https://higgsfield.ai/apps/game-dump',
+  nano_strike:'https://higgsfield.ai/apps/nano-strike',
+  simlife:'https://higgsfield.ai/apps/simlife',
+  pixel_game:'https://higgsfield.ai/apps/pixel-game',
+  plushies:'https://higgsfield.ai/apps/plushies',
+  figure_3d:'https://higgsfield.ai/apps/3d-figure',
+};
+function openHiggsfield(app){
+  window.open(HIGGSFIELD_APPS[app]||'https://higgsfield.ai','_blank');
 }
 
 const S={
@@ -352,7 +366,7 @@ function EventModal({event,dispatch,gs}){
     if(choice.outcome.scoreChange)dispatch({type:'CHANGE_SCORE',amount:choice.outcome.scoreChange});
     if(choice.outcome.coins)dispatch({type:'ADD_COINS',amount:choice.outcome.coins});
     if(choice.outcome.xp)dispatch({type:'ADD_XP',amount:choice.outcome.xp});
-    dispatch({type:'ADD_FEED',post:{avatar:gs.avatar,name:gs.playerName,text:`${event.title} — chose: "${choice.text}"`,day:gs.day,likes:Math.floor(Math.random()*860)+40,comments:Math.floor(Math.random()*30)+1}});
+    dispatch({type:'ADD_FEED',post:{avatar:gs.avatar,photo:gs.playerPhoto,name:gs.playerName,text:`${event.title} — chose: "${choice.text}"`,day:gs.day,likes:Math.floor(Math.random()*860)+40,comments:Math.floor(Math.random()*30)+1}});
     dispatch({type:'TICK_ACTION'});
   }
   return(
@@ -455,9 +469,199 @@ function Ghost({go}){
         <div style={{fontSize:15,color:C.sub,lineHeight:1.7,marginBottom:36}}>
           Learn everything without connecting real accounts. Your journey stays completely private.
         </div>
-        <button style={{...S.btn(),marginBottom:14}} onClick={()=>go('reveal')}>Continue as Ghost 👻</button>
-        <button onClick={()=>go('reveal')} style={{background:'transparent',border:`2px solid ${C.border}`,borderRadius:16,padding:'15px 28px',color:C.sub,fontSize:14,fontWeight:700,cursor:'pointer',width:'100%'}}>Connect Real Account</button>
+        <button style={{...S.btn(),marginBottom:14}} onClick={()=>go('charCreate')}>Continue as Ghost 👻</button>
+        <button onClick={()=>go('charCreate')} style={{background:'transparent',border:`2px solid ${C.border}`,borderRadius:16,padding:'15px 28px',color:C.sub,fontSize:14,fontWeight:700,cursor:'pointer',width:'100%'}}>Connect Real Account</button>
       </div>
+    </div>
+  );
+}
+
+function CharCreate({go,dispatch}){
+  const[name,setName]=useState('');
+  const[avatar,setAvatar]=useState('👤');
+  const[photo,setPhoto]=useState(null);
+  const AVATARS=['👤','💪','🦸','🧑‍💼','👑','💎','🔥','🤑','🦅','🏆'];
+  function handlePhoto(e){
+    const f=e.target.files[0];if(!f)return;
+    const r=new FileReader();r.onload=ev=>setPhoto(ev.target.result);r.readAsDataURL(f);
+  }
+  function proceed(){
+    const n=name.trim()||'Ghost';
+    dispatch({type:'SET_PLAYER',name:n,avatar,photo});
+    go('reveal');
+  }
+  return(
+    <div style={{...S.screen,padding:'28px 22px 40px',animation:'fadeUp 0.4s ease'}}>
+      <div style={{fontSize:26,fontWeight:900,color:C.text,marginBottom:4}}>Create Your Character</div>
+      <div style={{fontSize:14,color:C.sub,marginBottom:22}}>Who's building their 800+ score?</div>
+      <div style={{textAlign:'center',marginBottom:18}}>
+        <div style={{width:100,height:100,borderRadius:50,background:`linear-gradient(135deg,${C.primary},${C.gold})`,margin:'0 auto',display:'flex',alignItems:'center',justifyContent:'center',border:`3px solid ${C.primary}`,overflow:'hidden',boxShadow:`0 0 24px ${C.primary}55`}}>
+          {photo?<img src={photo} style={{width:'100%',height:'100%',objectFit:'cover'}}/>:<span style={{fontSize:52}}>{avatar}</span>}
+        </div>
+      </div>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:8,marginBottom:16}}>
+        {AVATARS.map(em=>(
+          <button key={em} onClick={()=>{setAvatar(em);setPhoto(null);}} style={{background:avatar===em&&!photo?`${C.primary}22`:C.card,border:`2px solid ${avatar===em&&!photo?C.primary:C.border}`,borderRadius:12,padding:'10px 4px',fontSize:24,cursor:'pointer',display:'flex',justifyContent:'center'}}>
+            {em}
+          </button>
+        ))}
+      </div>
+      <input value={name} onChange={e=>setName(e.target.value)} placeholder="Your name..." style={{width:'100%',background:C.card,border:`1px solid ${C.border}`,borderRadius:14,padding:'14px 18px',color:C.text,fontSize:16,marginBottom:10,outline:'none'}}/>
+      <label style={{display:'block',width:'100%',background:C.card,border:`1px dashed ${C.border}`,borderRadius:14,padding:'13px',textAlign:'center',cursor:'pointer',marginBottom:14,color:C.sub,fontSize:13}}>
+        📸 Upload your photo → paste as avatar
+        <input type="file" accept="image/*" onChange={handlePhoto} style={{display:'none'}}/>
+      </label>
+      <div style={{fontSize:11,color:C.sub,letterSpacing:2,textAlign:'center',marginBottom:8}}>GENERATE AI GAME CHARACTER</div>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8,marginBottom:16}}>
+        {[['game_dump','🎮','Game Avatar'],['pixel_game','👾','Pixel Art'],['nano_strike','⚔️','Action Hero']].map(([app,ic,label])=>(
+          <button key={app} onClick={()=>openHiggsfield(app)} style={{background:'linear-gradient(135deg,#6644ff,#4488ff)',border:'none',borderRadius:12,padding:'10px 6px',color:'#fff',fontSize:11,fontWeight:800,cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',gap:4}}>
+            <span style={{fontSize:20}}>{ic}</span>
+            <span>{label}</span>
+          </button>
+        ))}
+      </div>
+      <div style={{fontSize:10,color:C.muted,textAlign:'center',marginBottom:16}}>Powered by Higgsfield AI — upload your photo, copy image URL, paste above</div>
+      <button style={S.btn()} onClick={proceed}>Enter The Game ⚡</button>
+    </div>
+  );
+}
+
+function BattleRunner({gs,dispatch,onClose}){
+  const canvasRef=useRef(null);
+  const W=350,H=260,GROUND=205,PX=65,PR=20;
+  const gameRef=useRef({playerY:GROUND,playerVY:0,jumping:false,obstacles:[],powerups:[],frame:0,xpEarned:0,coinsEarned:0,hp:3,alive:true,done:false,elapsed:0,speed:2.8});
+
+  useEffect(()=>{
+    const canvas=canvasRef.current;
+    const ctx=canvas.getContext('2d');
+    const g=gameRef.current;
+    let animId,last=performance.now();
+
+    function jump(){if(!g.jumping&&g.alive&&!g.done){g.playerVY=-10;g.jumping=true;}}
+    canvas.addEventListener('click',jump);
+    canvas.addEventListener('touchstart',e=>{e.preventDefault();jump();},{passive:false});
+
+    function update(dt){
+      if(!g.alive||g.done)return;
+      g.elapsed+=dt;g.frame++;
+      g.speed=2.8+g.elapsed*0.05;
+      g.playerVY+=0.55;g.playerY+=g.playerVY;
+      if(g.playerY>=GROUND){g.playerY=GROUND;g.playerVY=0;g.jumping=false;}
+
+      const spawnRate=Math.max(38,75-g.elapsed*1.5);
+      if(g.frame%Math.round(spawnRate)===0){
+        const isGround=Math.random()>0.45;
+        g.obstacles.push({x:W+30,y:isGround?GROUND-4:GROUND-58,type:isGround?'g':'a',emoji:isGround?'❌':'📬'});
+      }
+      if(g.frame%55===20)g.powerups.push({x:W+20,y:GROUND-55,type:Math.random()>0.5?'coin':'xp',emoji:Math.random()>0.5?'🪙':'⚡'});
+
+      g.obstacles=g.obstacles.filter(o=>{o.x-=g.speed;return o.x>-40;});
+      g.powerups=g.powerups.filter(p=>{p.x-=g.speed;return p.x>-20;});
+
+      g.obstacles.forEach((o,i)=>{
+        if(Math.abs(PX-o.x)<28&&Math.abs(g.playerY-o.y)<28){
+          g.hp--;g.obstacles.splice(i,1);
+          if(g.hp<=0)g.alive=false;
+        }
+      });
+      g.powerups.forEach((p,i)=>{
+        if(Math.abs(PX-p.x)<PR+10&&Math.abs(g.playerY-p.y)<PR+14){
+          if(p.type==='coin')g.coinsEarned+=15;else g.xpEarned+=30;
+          g.powerups.splice(i,1);
+        }
+      });
+      g.xpEarned+=Math.round(dt*8);
+      if(g.elapsed>=30)g.done=true;
+    }
+
+    function draw(){
+      ctx.clearRect(0,0,W,H);
+      ctx.fillStyle=C.bg;ctx.fillRect(0,0,W,H);
+      // Scrolling grid lines
+      ctx.strokeStyle='#1a1a30';ctx.lineWidth=1;
+      for(let i=0;i<6;i++){const x=((g.frame*g.speed*0.5)%80)+i*80-80;ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+      // Ground
+      ctx.strokeStyle=C.primary;ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(0,GROUND+PR);ctx.lineTo(W,GROUND+PR);ctx.stroke();
+      // Ground track dashes
+      ctx.fillStyle='#1E1E3A';
+      for(let i=0;i<8;i++){const x=((g.frame*g.speed)%70)+i*70-70;ctx.fillRect(x,GROUND+PR+5,40,4);}
+      // THE ALGORITHM boss (top right, floats)
+      const bossY=28+Math.sin(g.frame*0.04)*6;
+      ctx.font='36px serif';ctx.textAlign='center';ctx.fillText('🤖',W-40,bossY);
+      ctx.fillStyle=C.purple;ctx.font='bold 9px sans-serif';ctx.textAlign='center';
+      ctx.fillText('THE ALGORITHM',W-40,bossY+22);
+      // Player glow
+      ctx.save();ctx.shadowColor=C.primary;ctx.shadowBlur=16;
+      ctx.fillStyle=C.primary;ctx.beginPath();ctx.arc(PX,g.playerY,PR,0,Math.PI*2);ctx.fill();
+      ctx.restore();
+      if(gs.playerPhoto){
+        try{
+          ctx.save();ctx.beginPath();ctx.arc(PX,g.playerY,PR,0,Math.PI*2);ctx.clip();
+          const img=new Image();img.src=gs.playerPhoto;ctx.drawImage(img,PX-PR,g.playerY-PR,PR*2,PR*2);
+          ctx.restore();
+        }catch(e){ctx.font='18px serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(gs.avatar,PX,g.playerY);}
+      }else{ctx.font='18px serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(gs.avatar,PX,g.playerY);}
+      // Obstacles
+      g.obstacles.forEach(o=>{ctx.font='26px serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(o.emoji,o.x,o.y);});
+      // Powerups bounce
+      g.powerups.forEach(p=>{const bounce=Math.sin(g.frame*0.12)*4;ctx.font='22px serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(p.emoji,p.x,p.y+bounce);});
+      // HP hearts
+      for(let i=0;i<3;i++){ctx.font='16px serif';ctx.textAlign='left';ctx.textBaseline='top';ctx.fillText(i<g.hp?'❤️':'🖤',10+i*22,10);}
+      // XP counter
+      ctx.fillStyle=C.gold;ctx.font='bold 13px sans-serif';ctx.textAlign='right';ctx.textBaseline='top';
+      ctx.fillText(`+${g.xpEarned} XP`,W-8,10);
+      // Timer bar
+      const tl=Math.max(0,30-g.elapsed);
+      ctx.fillStyle='#1E1E3A';ctx.fillRect(10,H-14,W-20,6);
+      ctx.fillStyle=tl<6?C.red:'#00C853';ctx.fillRect(10,H-14,(W-20)*(tl/30),6);
+      ctx.fillStyle=C.sub;ctx.font='10px sans-serif';ctx.textAlign='left';ctx.fillText(`${Math.ceil(tl)}s`,10,H-22);
+      // Speed indicator
+      ctx.fillStyle=C.primary;ctx.textAlign='right';ctx.fillText(`Speed x${g.speed.toFixed(1)}`,W-8,H-22);
+      // Game over overlay
+      if(!g.alive||g.done){
+        ctx.fillStyle='rgba(6,6,15,0.8)';ctx.fillRect(0,0,W,H);
+        ctx.fillStyle=g.alive?C.green:C.red;ctx.font='bold 28px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.fillText(g.alive?'🏆 VICTORY!':'💀 GAME OVER',W/2,H/2-26);
+        ctx.fillStyle=C.gold;ctx.font='bold 17px sans-serif';
+        ctx.fillText(`+${g.xpEarned} XP  +${g.coinsEarned} 🪙`,W/2,H/2+10);
+        ctx.fillStyle=C.sub;ctx.font='13px sans-serif';
+        ctx.fillText('Tap to close',W/2,H/2+36);
+      }
+    }
+
+    function loop(now){
+      const dt=Math.min((now-last)/1000,0.05);last=now;
+      update(dt);draw();
+      if(g.alive&&!g.done){animId=requestAnimationFrame(loop);}
+      else{
+        draw();
+        setTimeout(()=>{
+          dispatch({type:'BATTLE_WIN',xp:g.xpEarned,coins:g.coinsEarned,scoreChange:g.alive?Math.floor(g.xpEarned/30):0});
+          dispatch({type:'ADD_FEED',post:{avatar:gs.avatar,name:gs.playerName,text:`Survived THE ALGORITHM's credit attacks! +${g.xpEarned} XP earned. ⚔️`,day:gs.day,likes:Math.floor(Math.random()*600)+80,comments:Math.floor(Math.random()*20)+2}});
+        },2200);
+      }
+    }
+    animId=requestAnimationFrame(loop);
+    return()=>{cancelAnimationFrame(animId);canvas.removeEventListener('click',jump);};
+  },[]);
+
+  return(
+    <div style={{...S.screen,padding:'20px 18px 30px',animation:'fadeUp 0.3s ease'}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10}}>
+        <div>
+          <div style={{fontSize:20,fontWeight:900,color:C.text}}>⚔️ Credit Defender</div>
+          <div style={{fontSize:12,color:C.sub}}>Dodge THE ALGORITHM's attacks</div>
+        </div>
+        <button onClick={onClose} style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:10,padding:'7px 14px',color:C.sub,cursor:'pointer',fontSize:14}}>✕</button>
+      </div>
+      <div style={{...S.card,marginBottom:12,padding:'10px 14px',background:`${C.purple}12`,border:`1px solid ${C.purple}33`}}>
+        <div style={{display:'flex',gap:16,fontSize:12,color:C.sub}}>
+          <span>❌ = Late payment → jump over</span>
+          <span>📬 = Inquiry → duck under</span>
+        </div>
+        <div style={{fontSize:12,color:C.sub,marginTop:4}}>⚡🪙 = Collect bonuses • <span style={{color:C.primary,fontWeight:700}}>TAP to jump</span></div>
+      </div>
+      <canvas ref={canvasRef} width={350} height={260} style={{borderRadius:18,border:`1px solid ${C.border}`,display:'block',width:'100%',cursor:'pointer'}}/>
     </div>
   );
 }
@@ -513,7 +717,7 @@ function NPCRow({gs,dispatch}){
     if(dialogue.reward.scoreChange)dispatch({type:'CHANGE_SCORE',amount:dialogue.reward.scoreChange});
     if(dialogue.reward.coins)dispatch({type:'ADD_COINS',amount:dialogue.reward.coins});
     dispatch({type:'NPC_TALKED',id:`${npc.id}_${dialogue.q}`});
-    dispatch({type:'ADD_FEED',post:{avatar:npc.icon,name:npc.name,text:`Got schooled by ${npc.name} — "${dialogue.answer.slice(0,60)}..."`,day:gs.day,likes:Math.floor(Math.random()*500)+40,comments:Math.floor(Math.random()*20)+1}});
+    dispatch({type:'ADD_FEED',post:{avatar:gs.avatar,photo:gs.playerPhoto,name:gs.playerName,text:`Got schooled by ${npc.name} — "${dialogue.answer.slice(0,60)}..."`,day:gs.day,likes:Math.floor(Math.random()*500)+40,comments:Math.floor(Math.random()*20)+1}});
     dispatch({type:'TICK_ACTION'});
   }
 
@@ -579,12 +783,27 @@ function NPCRow({gs,dispatch}){
 function Home({gs,dispatch,go}){
   return(
     <div style={{...S.screen,padding:'68px 18px 100px',gap:14,animation:'fadeUp 0.3s ease'}}>
-      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-        <div>
-          <div style={{fontSize:22,fontWeight:900,color:C.text}}>FEDGE 2.O</div>
-          <div style={{fontSize:13,color:C.sub}}>Day {gs.day} • Credit Dashboard</div>
+      {/* Player character header */}
+      <div style={{display:'flex',alignItems:'center',gap:14}}>
+        <div style={{position:'relative',flexShrink:0}}>
+          <div style={{width:58,height:58,borderRadius:29,background:`linear-gradient(135deg,${C.primary},${C.gold})`,display:'flex',alignItems:'center',justifyContent:'center',border:`2.5px solid ${C.primary}`,overflow:'hidden',boxShadow:`0 0 16px ${C.primary}55`}}>
+            {gs.playerPhoto
+              ?<img src={gs.playerPhoto} style={{width:'100%',height:'100%',objectFit:'cover'}}/>
+              :<span style={{fontSize:30}}>{gs.avatar}</span>}
+          </div>
+          <div style={{position:'absolute',bottom:-2,right:-2,width:18,height:18,borderRadius:9,background:C.green,border:`2px solid ${C.bg}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:900,color:'#000'}}>Lv{gs.level}</div>
         </div>
-        <div style={{fontSize:28,animation:'streakFlame 2s infinite'}}>🔥</div>
+        <div style={{flex:1}}>
+          <div style={{fontSize:18,fontWeight:900,color:C.text}}>{gs.playerName}</div>
+          <div style={{fontSize:12,color:C.sub}}>Day {gs.day} • {scoreLabel(gs.creditScore)}</div>
+          <div style={{height:4,background:C.border,borderRadius:2,marginTop:5}}>
+            <div style={{height:'100%',width:`${Math.min(100,gs.xp/gs.xpMax*100)}%`,background:`linear-gradient(90deg,${C.primary},${C.gold})`,borderRadius:2,transition:'width 0.5s'}}/>
+          </div>
+        </div>
+        <div style={{textAlign:'center'}}>
+          <div style={{fontSize:22,animation:'streakFlame 2s infinite'}}>🔥</div>
+          <div style={{fontSize:11,color:C.primary,fontWeight:800}}>{gs.streak}d</div>
+        </div>
       </div>
       <div style={{...S.card,textAlign:'center'}}>
         <div style={{fontSize:11,color:C.sub,letterSpacing:3,marginBottom:12}}>CREDIT SCORE</div>
@@ -609,13 +828,31 @@ function Home({gs,dispatch,go}){
       </div>
       <RivalBar gs={gs}/>
       <NPCRow gs={gs} dispatch={dispatch}/>
-      <div style={{...S.card,background:`linear-gradient(135deg,${C.primary}18,${C.card})`,border:`1px solid ${C.primary}44`,cursor:'pointer',display:'flex',justifyContent:'space-between',alignItems:'center'}} onClick={()=>go('missions')}>
-        <div>
-          <div style={{fontSize:12,color:C.primary,fontWeight:700,letterSpacing:2}}>DAILY CHALLENGE</div>
-          <div style={{fontSize:18,fontWeight:800,color:C.text,marginTop:4}}>Complete a Mission</div>
-          <div style={{fontSize:13,color:C.sub,marginTop:4}}>+250 XP • +50 🪙</div>
+      {/* Battle + Challenge row */}
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+        <div onClick={()=>go('battle')} className="card-hover" style={{...S.card,background:`linear-gradient(135deg,${C.purple}22,${C.card})`,border:`1px solid ${C.purple}44`,cursor:'pointer',textAlign:'center',padding:'18px 12px'}}>
+          <div style={{fontSize:36,marginBottom:6}}>⚔️</div>
+          <div style={{fontSize:13,fontWeight:900,color:C.text}}>Credit Defender</div>
+          <div style={{fontSize:11,color:C.purple,marginTop:4}}>2D Battle • Beat THE ALGORITHM</div>
         </div>
-        <div style={{fontSize:44}}>⚡</div>
+        <div onClick={()=>go('missions')} className="card-hover" style={{...S.card,background:`linear-gradient(135deg,${C.primary}22,${C.card})`,border:`1px solid ${C.primary}44`,cursor:'pointer',textAlign:'center',padding:'18px 12px'}}>
+          <div style={{fontSize:36,marginBottom:6}}>⚡</div>
+          <div style={{fontSize:13,fontWeight:900,color:C.text}}>Daily Mission</div>
+          <div style={{fontSize:11,color:C.primary,marginTop:4}}>+250 XP • +50 🪙</div>
+        </div>
+      </div>
+      {/* Higgsfield avatar upgrade */}
+      <div style={{...S.card,background:`linear-gradient(135deg,#6644ff18,${C.card})`,border:'1px solid #6644ff44',padding:'14px 18px'}}>
+        <div style={{fontSize:11,color:'#8866ff',fontWeight:800,letterSpacing:2,marginBottom:8}}>UPGRADE YOUR CHARACTER</div>
+        <div style={{display:'flex',gap:8}}>
+          {[['game_dump','🎮','3D Avatar'],['pixel_game','👾','Pixel Art'],['nano_strike','⚔️','Action Hero'],['simlife','🌍','Simlife']].map(([app,ic,label])=>(
+            <button key={app} onClick={()=>openHiggsfield(app)} style={{flex:1,background:'linear-gradient(135deg,#6644ff,#4488ff)',border:'none',borderRadius:10,padding:'8px 4px',color:'#fff',fontSize:10,fontWeight:800,cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',gap:3}}>
+              <span style={{fontSize:18}}>{ic}</span>
+              <span>{label}</span>
+            </button>
+          ))}
+        </div>
+        <div style={{fontSize:9,color:C.muted,textAlign:'center',marginTop:6}}>Powered by Higgsfield AI</div>
       </div>
     </div>
   );
@@ -678,7 +915,7 @@ function MissionPlayer({mission,gs,dispatch,onDone}){
     dispatch({type:'ADD_XP',amount:xp});
     dispatch({type:'ADD_COINS',amount:Math.floor(xp/3)});
     dispatch({type:'COMPLETE_MISSION',id:mission.id});
-    dispatch({type:'ADD_FEED',post:{avatar:gs.avatar,name:gs.playerName,text:`Just leveled up on "${mission.title}"! 📊`,day:gs.day,likes:Math.floor(Math.random()*600)+40,comments:Math.floor(Math.random()*25)+1}});
+    dispatch({type:'ADD_FEED',post:{avatar:gs.avatar,photo:gs.playerPhoto,name:gs.playerName,text:`Just leveled up on "${mission.title}"! 📊`,day:gs.day,likes:Math.floor(Math.random()*600)+40,comments:Math.floor(Math.random()*25)+1}});
     dispatch({type:'TICK_ACTION'});
   }
 
@@ -794,7 +1031,7 @@ function Scenarios({gs,dispatch}){
     setChosen(c);
     dispatch({type:'CHANGE_SCORE',amount:c.impact});
     dispatch({type:'ADD_XP',amount:80});
-    dispatch({type:'ADD_FEED',post:{avatar:gs.avatar,name:gs.playerName,text:`Made a call on "${sc.title}". Score went ${c.impact>0?'UP':'DOWN'} ${Math.abs(c.impact)} pts.`,day:gs.day,likes:Math.floor(Math.random()*500)+40,comments:Math.floor(Math.random()*20)+1}});
+    dispatch({type:'ADD_FEED',post:{avatar:gs.avatar,photo:gs.playerPhoto,name:gs.playerName,text:`Made a call on "${sc.title}". Score went ${c.impact>0?'UP':'DOWN'} ${Math.abs(c.impact)} pts.`,day:gs.day,likes:Math.floor(Math.random()*500)+40,comments:Math.floor(Math.random()*20)+1}});
     dispatch({type:'TICK_ACTION'});
   }
 
@@ -854,18 +1091,24 @@ function Feed({gs}){
         <div style={{textAlign:'center',padding:40,color:C.sub}}>No posts yet. Complete missions to fill the feed!</div>
       )}
       {gs.socialFeed.map(post=>(
-        <div key={post.id} style={{...S.card,marginBottom:14,animation:'slideUp 0.3s ease'}}>
+        <div key={post.id} style={{...S.card,marginBottom:12,animation:'slideUp 0.3s ease'}}>
           <div style={{display:'flex',gap:12,alignItems:'flex-start'}}>
-            <div style={{fontSize:32,flexShrink:0}}>{post.avatar}</div>
+            <div style={{width:42,height:42,borderRadius:21,background:`linear-gradient(135deg,${C.primary},${C.gold})`,display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden',flexShrink:0,border:`2px solid ${C.primary}44`}}>
+              {post.photo
+                ?<img src={post.photo} style={{width:'100%',height:'100%',objectFit:'cover'}}/>
+                :<span style={{fontSize:22}}>{post.avatar}</span>}
+            </div>
             <div style={{flex:1}}>
               <div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}>
                 <span style={{fontSize:14,fontWeight:800,color:C.text}}>{post.name}</span>
                 <span style={{fontSize:11,color:C.muted}}>Day {post.day}</span>
               </div>
-              <div style={{fontSize:14,color:C.sub,lineHeight:1.6,marginBottom:10}}>{post.text}</div>
-              <div style={{display:'flex',gap:16}}>
+              <div style={{fontSize:13,color:C.sub,lineHeight:1.6,marginBottom:8}}>{post.text}</div>
+              <div style={{display:'flex',gap:16,alignItems:'center'}}>
                 <span style={{fontSize:12,color:C.muted}}>❤️ {post.likes}</span>
                 <span style={{fontSize:12,color:C.muted}}>💬 {post.comments}</span>
+                <div style={{flex:1}}/>
+                <div style={{width:6,height:6,borderRadius:3,background:C.green}}/>
               </div>
             </div>
           </div>
@@ -981,8 +1224,10 @@ function App(){
     if(screen==='splash')return<Splash go={go}/>;
     if(screen==='hero')return<Hero go={go}/>;
     if(screen==='ghost')return<Ghost go={go}/>;
+    if(screen==='charCreate')return<CharCreate go={go} dispatch={dispatch}/>;
     if(screen==='reveal')return<Reveal go={go}/>;
     if(screen==='home')return<Home gs={gs} dispatch={dispatch} go={go}/>;
+    if(screen==='battle')return<BattleRunner gs={gs} dispatch={dispatch} onClose={()=>go('home')}/>;
     if(screen==='missions'){
       if(mission)return<MissionPlayer mission={mission} gs={gs} dispatch={dispatch} onDone={()=>setMission(null)}/>;
       return<MissionsList gs={gs} dispatch={dispatch} onMission={setMission}/>;
