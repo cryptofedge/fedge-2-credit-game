@@ -1292,7 +1292,9 @@ function FedgeChat({gs}){
               <div style={{color:C.text,fontWeight:800,fontSize:15}}>FEDGE Assistant</div>
               <div style={{color:C.primary,fontSize:10,fontWeight:600}}>Powered by FEDGE 2.O</div>
             </div>
-            <button onClick={()=>setOpen(false)} style={{background:'none',border:'none',color:C.sub,fontSize:22,cursor:'pointer',lineHeight:1}}>✕</button>
+            <button onClick={()=>setOpen(false)} style={{background:C.card2,border:`1px solid ${C.border}`,borderRadius:20,padding:'6px 14px',color:C.sub,fontSize:12,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',gap:5}}>
+              <span style={{fontSize:14}}>←</span> Back
+            </button>
           </div>
 
           {/* api key gate */}
