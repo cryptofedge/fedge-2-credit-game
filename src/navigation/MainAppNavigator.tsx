@@ -8,10 +8,12 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import MainTabNavigator from './MainTabNavigator';
 import LeaderboardScreen from '@screens/main/LeaderboardScreen';
+import ChatScreen from '@screens/main/ChatScreen';
 
 export type MainAppStackParamList = {
   Tabs: undefined;
   Leaderboard: undefined;
+  Chat: undefined;
 };
 
 const Stack = createNativeStackNavigator<MainAppStackParamList>();
@@ -21,6 +23,11 @@ export default function MainAppNavigator() {
     <Stack.Navigator screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
       <Stack.Screen name="Tabs" component={MainTabNavigator} />
       <Stack.Screen name="Leaderboard" component={LeaderboardScreen} />
+      <Stack.Screen
+        name="Chat"
+        component={ChatScreen}
+        options={{ animation: 'slide_from_bottom' }}
+      />
     </Stack.Navigator>
   );
 }

@@ -406,6 +406,16 @@ export default function HomeScreen({ navigation }: any) {
 
         <View style={{ height: SPACING.xxl }} />
       </ScrollView>
+
+      {/* Floating Diana chat button */}
+      <TouchableOpacity
+        style={styles.chatFab}
+        activeOpacity={0.85}
+        onPress={() => navigation?.navigate('Chat')}
+      >
+        <Text style={styles.chatFabEmoji}>💬</Text>
+        <Text style={styles.chatFabLabel}>Ask Diana</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -580,4 +590,25 @@ const styles = StyleSheet.create({
   achievementName: { fontSize: FONTS.sizes.md, fontWeight: '800', color: COLORS.textPrimary },
   achievementDesc: { fontSize: FONTS.sizes.xs, color: COLORS.textSecondary, marginTop: 2 },
   achievementXP: { fontSize: FONTS.sizes.md, fontWeight: '900', color: COLORS.secondary },
+
+  // Floating chat button
+  chatFab: {
+    position: 'absolute',
+    bottom: 90,
+    right: SPACING.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.sm,
+    backgroundColor: COLORS.primary,
+    borderRadius: RADIUS.pill,
+    paddingVertical: SPACING.sm + 2,
+    paddingHorizontal: SPACING.md,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  chatFabEmoji: { fontSize: 18 },
+  chatFabLabel: { fontSize: FONTS.sizes.sm, fontWeight: '800', color: COLORS.bg },
 });
