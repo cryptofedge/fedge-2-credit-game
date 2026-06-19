@@ -27,6 +27,8 @@ import {
   Animated,
   StatusBar,
   Switch,
+  Modal,
+  FlatList,
 } from 'react-native';
 import { COLORS, FONTS, SPACING, RADIUS, SHADOWS } from '@constants/theme';
 import { useGameStore } from '@store/gameStore';
@@ -134,8 +136,15 @@ const ring = StyleSheet.create({
 // ─────────────────────────────────────────────
 export default function ProfileScreen({ navigation }: any) {
   const playerName      = useGameStore((s) => s.playerName);
+  const playerAvatar    = useGameStore((s) => s.playerAvatar);
+  const setPlayerAvatar = useGameStore((s) => s.setPlayerAvatar);
   const isGhostMode     = useGameStore((s) => s.isGhostMode);
   const setGhostMode    = useGameStore((s) => s.setGhostMode);
+
+  const [showAvatarPicker, setShowAvatarPicker] = React.useState(false);
+
+  const AVATARS = ['🧑', '👩', '👨', '🧑‍💼', '👩‍💼', '👨‍💼', '🦸', '🦸‍♀️', '🧙', '🦊', '🐉', '🤖', '👾', '🥷', '🎯', '⚡'];
+
   const level           = useGameStore((s) => s.level);
   const xp              = useGameStore((s) => s.xp);
   const fedgeCoins      = useGameStore((s) => s.fedgeCoins);
@@ -197,7 +206,13 @@ export default function ProfileScreen({ navigation }: any) {
           )}
 
           <View style={styles.heroTop}>
-            <LevelRing level={level} xp={xp} />
+            <TouchableOpacity onPress={() => setShowAvatarPicker(true)} activeOpacity={0.8}>
+              <View style={styles.avatarWrap}>
+                <LevelRing level={level} xp={xp} />
+                <Text style={styles.avatarEmoji}>{isGhostMode ? '👻' : playerAvatar}</Text>
+                <Text style={styles.avatarEditHint}>✏️</Text>
+              </View>
+            </TouchableOpacity>
 
             <View style={styles.heroInfo}>
               <Text style={styles.playerName} numberOfLines={1}>
@@ -398,6 +413,41 @@ export default function ProfileScreen({ navigation }: any) {
           </View>
         </View>
 
+        {/* ── SHARE CARD ────────────────────── */}
+        <View style={styles.shareSection}>
+          <Text style={styles.shareSectionTitle}>Share Your Progress</Text>
+          <View style={styles.shareCard}>
+            <View style={styles.shareCardHeader}>
+              <Text style={styles.shareCardEmoji}>{isGhostMode ? '👻' : playerAvatar}</Text>
+              <View>
+                <Text style={styles.shareCardName}>{isGhostMode ? 'Ghost Player' : playerName || 'FEDGE Player'}</Text>
+                <Text style={styles.shareCardLevel}>{levelData?.title ?? 'Credit Newbie'} · Level {level}</Text>
+              </View>
+              <View style={[styles.shareScorePill, { borderColor: sColor }]}>
+                <Text style={[styles.shareScore, { color: sColor }]}>{creditScore}</Text>
+              </View>
+            </View>
+            <View style={styles.shareStats}>
+              {[
+                { label: 'XP', value: xp.toLocaleString() },
+                { label: 'Missions', value: `${completedMissionCount}` },
+                { label: 'Streak', value: `${streak}d 🔥` },
+              ].map((s) => (
+                <View key={s.label} style={styles.shareStat}>
+                  <Text style={styles.shareStatValue}>{s.value}</Text>
+                  <Text style={styles.shareStatLabel}>{s.label}</Text>
+                </View>
+              ))}
+            </View>
+            <View style={styles.shareFooter}>
+              <Text style={styles.shareFooterText}>fedge2o.eclatuniverse.com</Text>
+            </View>
+          </View>
+          <TouchableOpacity style={styles.shareBtn} activeOpacity={0.85}>
+            <Text style={styles.shareBtnText}>📤 Share My Score</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* ── FOOTER ────────────────────────── */}
         <View style={styles.footer}>
           <Text style={styles.footerText}>FEDGE 2.O • Credit Education Game</Text>
@@ -405,6 +455,32 @@ export default function ProfileScreen({ navigation }: any) {
         </View>
 
       </ScrollView>
+
+      {/* ── AVATAR PICKER MODAL ───────────── */}
+      <Modal transparent animationType="slide" visible={showAvatarPicker} onRequestClose={() => setShowAvatarPicker(false)}>
+        <TouchableOpacity style={styles.avatarPickerBackdrop} activeOpacity={1} onPress={() => setShowAvatarPicker(false)}>
+          <View style={styles.avatarPickerSheet} onStartShouldSetResponder={() => true}>
+            <Text style={styles.avatarPickerTitle}>Choose Your Avatar</Text>
+            <Text style={styles.avatarPickerSub}>Tap to select your identity</Text>
+            <FlatList
+              data={AVATARS}
+              keyExtractor={(item) => item}
+              numColumns={4}
+              contentContainerStyle={styles.avatarGrid}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={[styles.avatarOption, playerAvatar === item && styles.avatarOptionSelected]}
+                  onPress={() => { setPlayerAvatar(item); setShowAvatarPicker(false); }}
+                >
+                  <Text style={styles.avatarOptionEmoji}>{item}</Text>
+                  {playerAvatar === item && <Text style={styles.avatarCheck}>✓</Text>}
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
     </View>
   );
 }
@@ -415,6 +491,29 @@ export default function ProfileScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.bg },
   scroll: { paddingBottom: 48 },
+
+  // Avatar wrap
+  avatarWrap: { position: 'relative', alignItems: 'center', justifyContent: 'center' },
+  avatarEmoji: { position: 'absolute', fontSize: 28, textAlign: 'center', lineHeight: 32 },
+  avatarEditHint: { position: 'absolute', bottom: -4, right: -4, fontSize: 12 },
+
+  // Avatar Picker Modal
+  avatarPickerBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
+  avatarPickerSheet: {
+    backgroundColor: COLORS.bgCard, borderTopLeftRadius: RADIUS.xl, borderTopRightRadius: RADIUS.xl,
+    padding: SPACING.xl, paddingBottom: 48,
+  },
+  avatarPickerTitle: { fontSize: FONTS.sizes.xl, fontWeight: '900', color: COLORS.textPrimary, textAlign: 'center', marginBottom: SPACING.xs },
+  avatarPickerSub: { fontSize: FONTS.sizes.sm, color: COLORS.textMuted, textAlign: 'center', marginBottom: SPACING.lg },
+  avatarGrid: { alignItems: 'center' },
+  avatarOption: {
+    width: 64, height: 64, borderRadius: RADIUS.lg, margin: SPACING.xs,
+    alignItems: 'center', justifyContent: 'center',
+    backgroundColor: COLORS.bgCardAlt, borderWidth: 2, borderColor: 'transparent',
+  },
+  avatarOptionSelected: { borderColor: COLORS.primary, backgroundColor: COLORS.primary + '20' },
+  avatarOptionEmoji: { fontSize: 32 },
+  avatarCheck: { position: 'absolute', top: 2, right: 4, fontSize: 10, color: COLORS.primary, fontWeight: '900' },
 
   // Hero
   heroCard: {
@@ -580,4 +679,35 @@ const styles = StyleSheet.create({
   footer: { alignItems: 'center', paddingVertical: SPACING.xl, gap: SPACING.xs },
   footerText: { fontSize: FONTS.sizes.xs, color: COLORS.textMuted, fontWeight: '700', letterSpacing: 1 },
   footerSub: { fontSize: FONTS.sizes.xs, color: COLORS.textMuted + '80', fontStyle: 'italic' },
+
+  // Share Card
+  shareSection: { marginHorizontal: SPACING.lg, marginBottom: SPACING.xl, gap: SPACING.md },
+  shareSectionTitle: { fontSize: FONTS.sizes.md, fontWeight: '800', color: COLORS.textPrimary },
+  shareCard: {
+    backgroundColor: COLORS.bgCard, borderRadius: RADIUS.xl,
+    borderWidth: 1, borderColor: COLORS.primary + '40', overflow: 'hidden',
+  },
+  shareCardHeader: {
+    flexDirection: 'row', alignItems: 'center', gap: SPACING.sm,
+    padding: SPACING.lg, backgroundColor: COLORS.primary + '08',
+  },
+  shareCardEmoji: { fontSize: 36 },
+  shareCardName: { fontSize: FONTS.sizes.md, fontWeight: '800', color: COLORS.textPrimary },
+  shareCardLevel: { fontSize: FONTS.sizes.xs, color: COLORS.textSecondary },
+  shareScorePill: {
+    marginLeft: 'auto', borderWidth: 1.5, borderRadius: RADIUS.pill,
+    paddingHorizontal: SPACING.md, paddingVertical: SPACING.xs,
+  },
+  shareScore: { fontSize: FONTS.sizes.lg, fontWeight: '900' },
+  shareStats: { flexDirection: 'row', borderTopWidth: 1, borderTopColor: COLORS.border },
+  shareStat: { flex: 1, alignItems: 'center', paddingVertical: SPACING.md, borderRightWidth: 1, borderRightColor: COLORS.border },
+  shareStatValue: { fontSize: FONTS.sizes.lg, fontWeight: '900', color: COLORS.textPrimary },
+  shareStatLabel: { fontSize: FONTS.sizes.xs, color: COLORS.textMuted },
+  shareFooter: { backgroundColor: COLORS.primary + '12', padding: SPACING.sm, alignItems: 'center' },
+  shareFooterText: { fontSize: FONTS.sizes.xs, color: COLORS.primary, fontWeight: '700', letterSpacing: 1 },
+  shareBtn: {
+    backgroundColor: COLORS.primary, borderRadius: RADIUS.pill,
+    paddingVertical: SPACING.md, alignItems: 'center',
+  },
+  shareBtnText: { fontSize: FONTS.sizes.md, fontWeight: '800', color: COLORS.bg },
 });

@@ -257,7 +257,7 @@ export default function MissionsListScreen({ navigation }: any) {
   const handleMissionPress = (mission: typeof MISSIONS[0], isUnlocked: boolean) => {
     if (!isUnlocked) return;
     if (mission.screen) {
-      navigation.navigate(mission.screen);
+      navigation.navigate('MissionIntro', { missionKey: mission.screen });
     }
   };
 

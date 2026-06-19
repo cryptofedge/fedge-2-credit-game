@@ -340,6 +340,8 @@ export default function MissionOneScreen({ navigation }: any) {
   // ─── RENDER ──────────────────────────────────
   return (
     <View style={styles.container}>
+      {/* Mission 1 art style: deep teal-to-dark gradient accent */}
+      <View style={styles.missionAccentBg} />
       <StatusBar barStyle="light-content" backgroundColor={COLORS.bg} />
 
       {/* Confetti */}
@@ -630,6 +632,11 @@ export default function MissionOneScreen({ navigation }: any) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.bg },
+  missionAccentBg: {
+    position: 'absolute', top: 0, left: 0, right: 0, height: 260,
+    backgroundColor: COLORS.primary + '08',
+    borderBottomWidth: 1, borderBottomColor: COLORS.primary + '15',
+  },
   confetti: {
     position: 'absolute', bottom: '50%', left: '50%',
     width: 10, height: 10, borderRadius: 2, zIndex: 50,

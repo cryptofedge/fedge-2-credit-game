@@ -39,8 +39,24 @@ export default function HeroIntroScreen({ navigation }: Props) {
   const ringScale = useRef(new Animated.Value(0)).current;
   const ringOpacity = useRef(new Animated.Value(0)).current;
   const heroOpacity = useRef(new Animated.Value(0)).current;
+  const heroScale = useRef(new Animated.Value(1.1)).current;
+  const heroTranslateX = useRef(new Animated.Value(10)).current;
 
   useEffect(() => {
+    // Ken Burns slow pan
+    Animated.loop(
+      Animated.sequence([
+        Animated.parallel([
+          Animated.timing(heroScale, { toValue: 1.18, duration: 8000, useNativeDriver: true }),
+          Animated.timing(heroTranslateX, { toValue: -10, duration: 8000, useNativeDriver: true }),
+        ]),
+        Animated.parallel([
+          Animated.timing(heroScale, { toValue: 1.1, duration: 8000, useNativeDriver: true }),
+          Animated.timing(heroTranslateX, { toValue: 10, duration: 8000, useNativeDriver: true }),
+        ]),
+      ])
+    ).start();
+
     Animated.sequence([
       Animated.timing(heroOpacity, { toValue: 1, duration: 700, useNativeDriver: true }),
       Animated.timing(headerOpacity, { toValue: 1, duration: 600, useNativeDriver: true }),
@@ -97,7 +113,11 @@ export default function HeroIntroScreen({ navigation }: Props) {
 
       {/* Hero character cinematic banner */}
       <Animated.View style={[styles.heroBannerWrap, { opacity: heroOpacity }]}>
-        <Image source={IMAGES.hero} style={styles.heroBanner} resizeMode="cover" />
+        <Animated.Image
+          source={IMAGES.hero}
+          style={[styles.heroBanner, { transform: [{ scale: heroScale }, { translateX: heroTranslateX }] }]}
+          resizeMode="cover"
+        />
         <View style={styles.heroBannerOverlay} />
 
         {/* Score ring overlaid on hero image */}
