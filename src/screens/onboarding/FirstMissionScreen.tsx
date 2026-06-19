@@ -322,8 +322,8 @@ export default function FirstMissionScreen({ navigation }: Props) {
               style={styles.ctaButton}
               activeOpacity={0.85}
               onPress={() => {
-                /* Navigate to main game HomeScreen */
-                // navigation.navigate('MainApp');
+                const { setPlayerName, isGhostMode } = useGameStore.getState();
+                setPlayerName(isGhostMode ? 'Ghost Player' : 'FEDGE Player');
               }}
             >
               <Text style={styles.ctaText}>🚀 Start Mission 1</Text>

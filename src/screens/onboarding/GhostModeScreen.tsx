@@ -66,7 +66,6 @@ const GHOST_FEATURES = [
 ];
 
 export default function GhostModeScreen({ navigation }: Props) {
-  const setPlayerName = useGameStore((s) => s.setPlayerName);
   const addXP = useGameStore((s) => s.addXP);
 
   const [ghostName] = useState(generateGhostName);
@@ -101,8 +100,10 @@ export default function GhostModeScreen({ navigation }: Props) {
     navigation.navigate('ChoosePath');
   };
 
+  const setGhostMode = useGameStore((s) => s.setGhostMode);
+
   const handleGhostMode = () => {
-    setPlayerName(ghostName);
+    setGhostMode(true);
     addXP(50);
     navigation.navigate('ChoosePath');
   };

@@ -38,7 +38,7 @@ export default function SplashScreen({ navigation }: Props) {
       Animated.delay(150),
       Animated.timing(subtitleOpacity, { toValue: 1, duration: 400, useNativeDriver: true }),
     ]).start(() => {
-      setTimeout(() => navigation.replace('Disclaimer'), 1800);
+      setTimeout(() => navigation.replace('HeroIntro'), 1800);
     });
 
     Animated.timing(barWidth, {
