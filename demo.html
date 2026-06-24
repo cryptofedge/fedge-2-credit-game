@@ -7,6 +7,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#0A0A1A;display:flex;justify-content:center;align-items:center;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
@@ -328,6 +330,221 @@ const S={
   tag:(color)=>({background:`${color}22`,border:`1px solid ${color}44`,borderRadius:20,padding:'6px 14px',fontSize:13,color,fontWeight:700}),
 };
 
+// ── THREE.JS 3D CREDIT CARD (Splash background) ─────────
+function CreditCard3D(){
+  const ref=useRef(null);
+  useEffect(()=>{
+    if(!window.THREE||!ref.current)return;
+    const el=ref.current;
+    const W=el.clientWidth||390,H=el.clientHeight||844;
+    const renderer=new THREE.WebGLRenderer({canvas:el,antialias:true,alpha:false});
+    renderer.setSize(W,H); renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+    renderer.setClearColor(0x06060F,1);
+    const scene=new THREE.Scene();
+    scene.fog=new THREE.FogExp2(0x06060F,0.04);
+    const cam=new THREE.PerspectiveCamera(50,W/H,0.1,100);
+    cam.position.set(0,0,7);
+
+    // Stars
+    const sp=new Float32Array(600);
+    for(let i=0;i<600;i+=3){sp[i]=(Math.random()-.5)*50;sp[i+1]=(Math.random()-.5)*50;sp[i+2]=-Math.random()*30-5;}
+    const sg=new THREE.BufferGeometry();
+    sg.setAttribute('position',new THREE.BufferAttribute(sp,3));
+    scene.add(new THREE.Points(sg,new THREE.PointsMaterial({color:0xffffff,size:0.12,transparent:true,opacity:0.7})));
+
+    // Credit card body
+    const card=new THREE.Group();
+    const body=new THREE.Mesh(new THREE.BoxGeometry(3.4,2.1,0.07),new THREE.MeshPhongMaterial({color:0xE87012,emissive:0x220800,shininess:80}));
+    card.add(body);
+    // Chip
+    const chip=new THREE.Mesh(new THREE.BoxGeometry(0.42,0.32,0.04),new THREE.MeshPhongMaterial({color:0xC8A96E,emissive:0x110800,shininess:120}));
+    chip.position.set(-0.9,0.4,0.06);
+    card.add(chip);
+    // Stripe
+    const stripe=new THREE.Mesh(new THREE.BoxGeometry(3.4,0.38,0.02),new THREE.MeshPhongMaterial({color:0x1a1a2e}));
+    stripe.position.set(0,0.6,0.05);
+    card.add(stripe);
+    // Number dots row
+    for(let i=0;i<16;i++){
+      const d=new THREE.Mesh(new THREE.CircleGeometry(0.04,8),new THREE.MeshBasicMaterial({color:0xFFD700}));
+      d.position.set(-1.4+(i%4)*0.32+(Math.floor(i/4)*0.55),-0.2,0.05);
+      card.add(d);
+    }
+    card.rotation.x=0.25;
+    scene.add(card);
+
+    // Orbit ring
+    const ring=new THREE.Mesh(new THREE.TorusGeometry(2.2,0.025,8,80),new THREE.MeshBasicMaterial({color:0xE87012,transparent:true,opacity:0.4}));
+    ring.rotation.x=Math.PI/3;
+    scene.add(ring);
+
+    // Particles orbiting
+    const partGeo=new THREE.BufferGeometry();
+    const partPos=new Float32Array(60);
+    for(let i=0;i<60;i+=3){const a=Math.random()*Math.PI*2;const r=2+Math.random()*0.5;partPos[i]=Math.cos(a)*r;partPos[i+1]=(Math.random()-.5)*1.2;partPos[i+2]=Math.sin(a)*r;}
+    partGeo.setAttribute('position',new THREE.BufferAttribute(partPos,3));
+    const parts=new THREE.Points(partGeo,new THREE.PointsMaterial({color:0xFFD700,size:0.06,transparent:true,opacity:0.8}));
+    scene.add(parts);
+
+    // Lights
+    scene.add(new THREE.AmbientLight(0x222222,1));
+    const gl=new THREE.PointLight(0xE87012,6,20);gl.position.set(2,2,4);scene.add(gl);
+    const bl=new THREE.PointLight(0x4A9EFF,3,15);bl.position.set(-3,0,3);scene.add(bl);
+
+    let t=0,raf;
+    function animate(){
+      raf=requestAnimationFrame(animate);t+=0.012;
+      card.rotation.y=Math.sin(t*0.6)*0.5;
+      card.rotation.x=0.25+Math.sin(t*0.4)*0.1;
+      card.position.y=Math.sin(t*0.7)*0.15;
+      ring.rotation.z=t*0.3;
+      parts.rotation.y=t*0.25;
+      gl.position.x=Math.sin(t)*3;gl.position.z=Math.cos(t)*3+3;
+      renderer.render(scene,cam);
+    }
+    animate();
+
+    const onResize=()=>{const W=el.clientWidth||390,H=el.clientHeight||844;renderer.setSize(W,H);cam.aspect=W/H;cam.updateProjectionMatrix();};
+    window.addEventListener('resize',onResize);
+    return()=>{cancelAnimationFrame(raf);renderer.dispose();window.removeEventListener('resize',onResize);};
+  },[]);
+  return <canvas ref={ref} style={{position:'absolute',inset:0,width:'100%',height:'100%'}}/>;
+}
+
+// ── THREE.JS SCORE ORB (behind Home score ring) ──────────
+function ScoreOrb3D({score}){
+  const ref=useRef(null);
+  const scC=score>=800?0x00C853:score>=740?0x7BC67E:score>=670?0xFFD700:score>=580?0xFF9500:0xFF4040;
+  useEffect(()=>{
+    if(!window.THREE||!ref.current)return;
+    const el=ref.current;
+    const renderer=new THREE.WebGLRenderer({canvas:el,antialias:true,alpha:true});
+    renderer.setClearColor(0x000000,0);renderer.setSize(210,210);renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+    const scene=new THREE.Scene();
+    const cam=new THREE.PerspectiveCamera(40,1,0.1,50);cam.position.set(0,0,5.5);
+    // Glowing sphere
+    const sphere=new THREE.Mesh(new THREE.SphereGeometry(1.6,32,32),new THREE.MeshPhongMaterial({color:scC,emissive:scC,emissiveIntensity:0.3,transparent:true,opacity:0.18,shininess:60}));
+    scene.add(sphere);
+    // Outer glow ring
+    const gRing=new THREE.Mesh(new THREE.TorusGeometry(1.85,0.04,8,64),new THREE.MeshBasicMaterial({color:scC,transparent:true,opacity:0.5}));
+    scene.add(gRing);
+    // Orbit particles
+    const og=new THREE.BufferGeometry();
+    const op=new Float32Array(45);
+    for(let i=0;i<45;i+=3){const a=Math.random()*Math.PI*2;op[i]=Math.cos(a)*2.1;op[i+1]=(Math.random()-.5)*0.4;op[i+2]=Math.sin(a)*2.1;}
+    og.setAttribute('position',new THREE.BufferAttribute(op,3));
+    const orbitPts=new THREE.Points(og,new THREE.PointsMaterial({color:scC,size:0.06,transparent:true,opacity:0.7}));
+    scene.add(orbitPts);
+    scene.add(new THREE.AmbientLight(0x333333,1));
+    const pl=new THREE.PointLight(scC,4,12);pl.position.set(2,2,3);scene.add(pl);
+    let t=0,raf;
+    function animate(){raf=requestAnimationFrame(animate);t+=0.016;sphere.rotation.y=t*0.4;gRing.rotation.z=t*0.3;orbitPts.rotation.y=t*0.5;renderer.render(scene,cam);}
+    animate();
+    return()=>{cancelAnimationFrame(raf);renderer.dispose();};
+  },[score]);
+  return <canvas ref={ref} style={{position:'absolute',left:'50%',top:0,transform:'translateX(-50%)',width:210,height:210,pointerEvents:'none',zIndex:0}}/>;
+}
+
+// ── PHASER PAYMENT MINI-GAME ─────────────────────────────
+function PaymentMiniGame({gs,dispatch,onClose}){
+  const containerRef=useRef(null);
+  useEffect(()=>{
+    if(!window.Phaser||!containerRef.current)return;
+    const W=350,H=560;
+    class PayScene extends Phaser.Scene{
+      constructor(){super('pay');}
+      create(){
+        this.paid=0;this.missed=0;this.sc=0;this.bills=[];this.timeLeft=20;this.active=true;
+        this.add.rectangle(W/2,H/2,W,H,0x06060F);
+        // Overdue line
+        this.overY=H*0.82;
+        const ln=this.add.graphics();ln.lineStyle(2,0xFF4040,0.9);ln.lineBetween(0,this.overY,W,this.overY);
+        this.add.text(W-10,this.overY-16,'⚠️ OVERDUE',{fontSize:'10px',color:'#ff4040',fontFamily:'monospace'}).setOrigin(1,0);
+        this.add.text(W/2,22,'💳  PAY YOUR BILLS!',{fontSize:'17px',color:'#E87012',fontFamily:'Arial Black,Arial'}).setOrigin(0.5);
+        this.timerTxt=this.add.text(W-14,22,'20s',{fontSize:'13px',color:'#9090b0',fontFamily:'monospace'}).setOrigin(1,0.5);
+        this.paidTxt=this.add.text(14,22,'PAID: 0',{fontSize:'13px',color:'#00C853',fontFamily:'monospace'}).setOrigin(0,0.5);
+        const bills=[{l:'VISA $250',c:0x4A9EFF},{l:'AMEX $180',c:0x00C853},{l:'AUTO $420',c:0xA855F7},{l:'RENT $1,200',c:0xE87012},{l:'STUDENT $180',c:0xFFD700},{l:'MEDICAL $350',c:0xFF4040}];
+        this.time.addEvent({delay:1100,loop:true,callback:()=>{
+          if(!this.active)return;
+          const bd=bills[Phaser.Math.Between(0,bills.length-1)];
+          const x=40+Math.random()*(W-80);
+          const g=this.add.graphics();
+          g.fillStyle(bd.c,0.12);g.fillRoundedRect(-54,-20,108,40,7);
+          g.lineStyle(1.5,bd.c,0.85);g.strokeRoundedRect(-54,-20,108,40,7);
+          g.x=x;g.y=50;
+          const t=this.add.text(x,50,bd.l,{fontSize:'12px',color:'#'+bd.c.toString(16).padStart(6,'0'),fontFamily:'monospace',fontStyle:'bold'}).setOrigin(0.5);
+          const tap=this.add.text(x,65,'TAP',{fontSize:'9px',color:'#6b6b8a',fontFamily:'monospace'}).setOrigin(0.5);
+          const bill={g,t,tap,done:false};
+          g.setInteractive(new Phaser.Geom.Rectangle(-54,-20,108,40),Phaser.Geom.Rectangle.Contains);
+          g.on('pointerdown',()=>this.pay(bill));
+          t.setInteractive(new Phaser.Geom.Rectangle(-40,-10,80,20),Phaser.Geom.Rectangle.Contains);
+          t.on('pointerdown',()=>this.pay(bill));
+          this.bills.push(bill);
+        }});
+        this.time.addEvent({delay:1000,loop:true,callback:()=>{
+          if(!this.active)return;
+          this.timeLeft--;this.timerTxt.setText(this.timeLeft+'s');
+          if(this.timeLeft<=3)this.timerTxt.setColor('#ff4040');
+          if(this.timeLeft<=0)this.endGame();
+        }});
+      }
+      pay(bill){
+        if(!this.active||bill.done)return;
+        bill.done=true;this.paid++;this.sc+=5;this.paidTxt.setText('PAID: '+this.paid);
+        const pop=this.add.text(bill.g.x,bill.g.y-20,'✓ PAID',{fontSize:'14px',color:'#00C853',fontFamily:'Arial Black,Arial'}).setOrigin(0.5).setDepth(10);
+        this.tweens.add({targets:pop,y:bill.g.y-55,alpha:0,duration:500,onComplete:()=>pop.destroy()});
+        this.tweens.add({targets:[bill.g,bill.t,bill.tap],alpha:0,duration:280,onComplete:()=>{bill.g.destroy();bill.t.destroy();bill.tap.destroy();}});
+      }
+      update(){
+        if(!this.active)return;
+        const spd=1.3+(20-this.timeLeft)*0.07;
+        this.bills.forEach(b=>{
+          if(b.done)return;
+          b.g.y+=spd;b.t.y+=spd;b.tap.y+=spd;
+          if(b.g.y>=this.overY+22){
+            b.done=true;this.missed++;this.sc-=8;
+            const miss=this.add.text(b.g.x,this.overY-12,'⚠️ OVERDUE',{fontSize:'11px',color:'#ff4040',fontFamily:'monospace'}).setOrigin(0.5);
+            this.time.delayedCall(700,()=>miss.destroy());
+            b.g.destroy();b.t.destroy();b.tap.destroy();
+          }
+        });
+        this.bills=this.bills.filter(b=>!b.done);
+      }
+      endGame(){
+        if(!this.active)return;this.active=false;
+        const good=this.sc>0;
+        this.add.rectangle(W/2,H/2,W,H,0x000000,0.82).setDepth(20);
+        this.add.text(W/2,H/2-90,good?'💪 GREAT PAYER!':'⚠️ MISSED BILLS!',{fontSize:'24px',fontFamily:'Arial Black,Arial',color:good?'#00C853':'#ff4040'}).setOrigin(0.5).setDepth(21);
+        this.add.text(W/2,H/2-42,`PAID: ${this.paid}  MISSED: ${this.missed}`,{fontSize:'15px',fontFamily:'monospace',color:'#9090b0'}).setOrigin(0.5).setDepth(21);
+        this.add.text(W/2,H/2+5,`Score ${this.sc>0?'+':''}${this.sc} pts`,{fontSize:'22px',fontFamily:'Arial Black,Arial',color:good?'#00C853':'#ff4040'}).setOrigin(0.5).setDepth(21);
+        const btn=this.add.text(W/2,H/2+80,'[ COLLECT ]',{fontSize:'18px',fontFamily:'Arial Black,Arial',color:'#000',backgroundColor:'#E87012',padding:{x:18,y:12}}).setOrigin(0.5).setDepth(21).setInteractive({useHandCursor:true});
+        btn.on('pointerdown',()=>{if(window._payDone)window._payDone({paid:this.paid,missed:this.missed,sc:this.sc});});
+      }
+    }
+    const game=new Phaser.Game({type:Phaser.CANVAS,width:W,height:H,parent:containerRef.current,backgroundColor:'#06060F',scene:[PayScene],scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH}});
+    window._payDone=(r)=>{
+      const delta=Math.max(-20,Math.min(25,r.sc));
+      dispatch({type:'CHANGE_SCORE',amount:delta});
+      dispatch({type:'ADD_XP',amount:Math.max(40,r.paid*22)});
+      dispatch({type:'ADD_COINS',amount:r.paid*8});
+      dispatch({type:'ADD_FEED',post:{avatar:gs.avatar,name:gs.playerName,text:`Played Payment Game — paid ${r.paid} bills, missed ${r.missed}. Score ${r.sc>0?'+':''}${r.sc} pts 💳`,day:gs.day,likes:Math.floor(Math.random()*80)+15,comments:Math.floor(Math.random()*8)+1}});
+      dispatch({type:'TICK_ACTION'});
+      onClose();
+    };
+    return()=>{game.destroy(true);delete window._payDone;};
+  },[]);
+  return(
+    <div style={{position:'absolute',inset:0,background:'#06060F',zIndex:200,display:'flex',flexDirection:'column'}}>
+      <div style={{padding:'13px 18px 0',display:'flex',justifyContent:'space-between',alignItems:'center',flexShrink:0}}>
+        <div style={{fontSize:15,fontWeight:900,color:C.primary,letterSpacing:2}}>💳 PAYMENT GAME</div>
+        <button onClick={onClose} style={{background:'transparent',border:`1px solid ${C.border}`,borderRadius:8,color:C.sub,fontSize:13,padding:'6px 12px',cursor:'pointer'}}>✕ EXIT</button>
+      </div>
+      <div style={{fontSize:11,color:C.sub,textAlign:'center',padding:'4px 0 0'}}>Tap bills before they go overdue!</div>
+      <div ref={containerRef} style={{flex:1,display:'flex',justifyContent:'center',alignItems:'center'}}/>
+    </div>
+  );
+}
+
 function ScoreRing({score,size=200,pulse=false}){
   const r=size*0.38,cx=size/2,cy=size*0.55;
   const circ=Math.PI*r,pct=(score-300)/550;
@@ -419,7 +636,8 @@ const FEDGE_LOGO='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABQCAYAAACO
 function Splash({go}){
   useEffect(()=>{const t=setTimeout(()=>go('hero'),2800);return()=>clearTimeout(t)},[]);
   return(
-    <div style={{...S.screen,justifyContent:'center',alignItems:'center',gap:24,background:`radial-gradient(ellipse at center, #1a0f06 0%, ${C.bg} 70%)`}}>
+    <div style={{...S.screen,justifyContent:'center',alignItems:'center',gap:24,background:C.bg,position:'relative'}}>
+      <CreditCard3D/>
       <div style={{position:'relative',display:'flex',justifyContent:'center',alignItems:'center'}}>
         <div style={{position:'absolute',width:160,height:160,borderRadius:'50%',background:`radial-gradient(circle, ${C.primary}33 0%, transparent 70%)`,animation:'glow 2s infinite'}}/>
         <img src={FEDGE_LOGO} alt="FEDGE" style={{width:140,height:140,objectFit:'contain',animation:'pulse 2s infinite',filter:'drop-shadow(0 0 24px rgba(232,112,18,0.7))'}}/>
@@ -781,8 +999,10 @@ function NPCRow({gs,dispatch}){
 }
 
 function Home({gs,dispatch,go}){
+  const[showPay,setShowPay]=useState(false);
   return(
     <div style={{...S.screen,padding:'68px 18px 100px',gap:14,animation:'fadeUp 0.3s ease'}}>
+      {showPay&&<PaymentMiniGame gs={gs} dispatch={dispatch} onClose={()=>setShowPay(false)}/>}
       {/* Player character header */}
       <div style={{display:'flex',alignItems:'center',gap:14}}>
         <div style={{position:'relative',flexShrink:0}}>
@@ -807,7 +1027,10 @@ function Home({gs,dispatch,go}){
       </div>
       <div style={{...S.card,textAlign:'center'}}>
         <div style={{fontSize:11,color:C.sub,letterSpacing:3,marginBottom:12}}>CREDIT SCORE</div>
-        <div style={{display:'flex',justifyContent:'center'}}><ScoreRing score={gs.creditScore} size={210} pulse={!!gs.scoreChanged}/></div>
+        <div style={{display:'flex',justifyContent:'center',position:'relative',height:140}}>
+          <ScoreOrb3D score={gs.creditScore}/>
+          <div style={{position:'relative',zIndex:1}}><ScoreRing score={gs.creditScore} size={210} pulse={!!gs.scoreChanged}/></div>
+        </div>
         <div style={{marginTop:12}}>
           <div style={{display:'flex',justifyContent:'space-between',fontSize:12,color:C.sub,marginBottom:6}}>
             <span>Level {gs.level} • {gs.xp.toLocaleString()} XP</span>
@@ -828,17 +1051,22 @@ function Home({gs,dispatch,go}){
       </div>
       <RivalBar gs={gs}/>
       <NPCRow gs={gs} dispatch={dispatch}/>
-      {/* Battle + Challenge row */}
-      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
-        <div onClick={()=>go('battle')} className="card-hover" style={{...S.card,background:`linear-gradient(135deg,${C.purple}22,${C.card})`,border:`1px solid ${C.purple}44`,cursor:'pointer',textAlign:'center',padding:'18px 12px'}}>
-          <div style={{fontSize:36,marginBottom:6}}>⚔️</div>
-          <div style={{fontSize:13,fontWeight:900,color:C.text}}>Credit Defender</div>
-          <div style={{fontSize:11,color:C.purple,marginTop:4}}>2D Battle • Beat THE ALGORITHM</div>
+      {/* Battle + Challenge + Pay Game row */}
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:10}}>
+        <div onClick={()=>go('battle')} className="card-hover" style={{...S.card,background:`linear-gradient(135deg,${C.purple}22,${C.card})`,border:`1px solid ${C.purple}44`,cursor:'pointer',textAlign:'center',padding:'14px 8px'}}>
+          <div style={{fontSize:30,marginBottom:4}}>⚔️</div>
+          <div style={{fontSize:12,fontWeight:900,color:C.text}}>Defender</div>
+          <div style={{fontSize:10,color:C.purple,marginTop:3}}>2D Battle</div>
         </div>
-        <div onClick={()=>go('missions')} className="card-hover" style={{...S.card,background:`linear-gradient(135deg,${C.primary}22,${C.card})`,border:`1px solid ${C.primary}44`,cursor:'pointer',textAlign:'center',padding:'18px 12px'}}>
-          <div style={{fontSize:36,marginBottom:6}}>⚡</div>
-          <div style={{fontSize:13,fontWeight:900,color:C.text}}>Daily Mission</div>
-          <div style={{fontSize:11,color:C.primary,marginTop:4}}>+250 XP • +50 🪙</div>
+        <div onClick={()=>go('missions')} className="card-hover" style={{...S.card,background:`linear-gradient(135deg,${C.primary}22,${C.card})`,border:`1px solid ${C.primary}44`,cursor:'pointer',textAlign:'center',padding:'14px 8px'}}>
+          <div style={{fontSize:30,marginBottom:4}}>⚡</div>
+          <div style={{fontSize:12,fontWeight:900,color:C.text}}>Mission</div>
+          <div style={{fontSize:10,color:C.primary,marginTop:3}}>+250 XP</div>
+        </div>
+        <div onClick={()=>setShowPay(true)} className="card-hover" style={{...S.card,background:`linear-gradient(135deg,${C.green}22,${C.card})`,border:`1px solid ${C.green}44`,cursor:'pointer',textAlign:'center',padding:'14px 8px'}}>
+          <div style={{fontSize:30,marginBottom:4}}>💳</div>
+          <div style={{fontSize:12,fontWeight:900,color:C.text}}>Pay Game</div>
+          <div style={{fontSize:10,color:C.green,marginTop:3}}>Phaser 2D</div>
         </div>
       </div>
       {/* Higgsfield avatar upgrade */}
