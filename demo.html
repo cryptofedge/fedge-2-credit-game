@@ -1214,6 +1214,195 @@ function MissionPlayer({mission,gs,dispatch,onDone}){
   );
 }
 
+// ── THREE.JS FICO BAR CHART ───────────────────
+function FICOChart3D({factors}){
+  const ref=useRef(null);
+  useEffect(()=>{
+    if(!window.THREE||!ref.current)return;
+    const el=ref.current;
+    const W=el.offsetWidth||354,H=170;
+    const renderer=new THREE.WebGLRenderer({canvas:el,antialias:true,alpha:false});
+    renderer.setSize(W,H);renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+    renderer.setClearColor(0x0F0F1E,1);
+    const scene=new THREE.Scene();
+    const cam=new THREE.PerspectiveCamera(42,W/H,0.1,60);
+    cam.position.set(0,5,11);cam.lookAt(0,0,0);
+
+    // Ground
+    scene.add(Object.assign(new THREE.Mesh(new THREE.PlaneGeometry(12,8),new THREE.MeshPhongMaterial({color:0x0a0a18})),{rotation:{x:-Math.PI/2,y:0,z:0},position:{x:0,y:-0.05,z:0}}));
+    const grid=new THREE.GridHelper(12,12,0x1a1a3a,0x111128);scene.add(grid);
+
+    const BARS=[
+      {label:'PAYMENT',  pct:factors?.pay??0.97, col:0x00C853},
+      {label:'UTIL',     pct:1-(factors?.util??0.12), col:0xE87012},
+      {label:'AGE',      pct:factors?.age??0.5,  col:0x4A9EFF},
+      {label:'MIX',      pct:factors?.mix??0.6,  col:0xA855F7},
+      {label:'NEW CRED', pct:factors?.inq??0.85, col:0xFFD700},
+    ];
+    const weights=[0.35,0.30,0.15,0.10,0.10];
+    const maxH=4.5;
+    const bars=[];
+    BARS.forEach((b,i)=>{
+      const h=Math.max(0.1,b.pct*weights[i]*maxH/0.35);
+      const bar=new THREE.Mesh(
+        new THREE.BoxGeometry(0.9,h,0.9),
+        new THREE.MeshPhongMaterial({color:b.col,emissive:b.col,emissiveIntensity:0.2,shininess:60})
+      );
+      bar.position.set(-4+i*2,h/2,0);
+      bar.scale.y=0.01;
+      scene.add(bar);
+      // Glow cap
+      const cap=new THREE.Mesh(new THREE.BoxGeometry(0.9,0.08,0.9),new THREE.MeshBasicMaterial({color:b.col}));
+      cap.position.set(-4+i*2,h+0.04,0);
+      cap.scale.y=0.01;
+      scene.add(cap);
+      const pl=new THREE.PointLight(b.col,2.5,4);
+      pl.position.set(-4+i*2,h+0.5,0.5);
+      scene.add(pl);
+      bars.push({mesh:bar,cap,pl,targetH:h,col:b.col});
+    });
+
+    scene.add(new THREE.AmbientLight(0x223344,1));
+    const sun=new THREE.DirectionalLight(0x445566,0.5);sun.position.set(4,8,4);scene.add(sun);
+
+    // Animate bars rising + slow camera drift
+    let t=0,growing=true;
+    function animate(){
+      requestAnimationFrame(animate);t+=0.02;
+      if(growing){
+        let done=true;
+        bars.forEach(b=>{
+          if(b.mesh.scale.y<1){done=false;b.mesh.scale.y=Math.min(1,b.mesh.scale.y+0.04);b.cap.scale.y=b.mesh.scale.y;b.mesh.position.y=b.targetH/2*b.mesh.scale.y;b.cap.position.y=b.targetH*b.mesh.scale.y+0.04;b.pl.position.y=b.targetH*b.mesh.scale.y+0.5;}
+        });
+        if(done)growing=false;
+      }
+      cam.position.x=Math.sin(t*0.3)*1.5;
+      bars.forEach((b,i)=>{b.mesh.material.emissiveIntensity=0.15+Math.sin(t*2+i)*0.1;});
+      renderer.render(scene,cam);
+    }
+    animate();
+    return()=>{renderer.dispose();};
+  },[factors?.pay,factors?.util,factors?.age,factors?.mix,factors?.inq]);
+  return(
+    <div style={{position:'relative'}}>
+      <canvas ref={ref} style={{display:'block',width:'100%',height:170,borderRadius:14}}/>
+      <div style={{display:'flex',justifyContent:'space-around',marginTop:6,paddingBottom:2}}>
+        {[['PAY','#00C853','35%'],['UTIL','#E87012','30%'],['AGE','#4A9EFF','15%'],['MIX','#A855F7','10%'],['NEW','#FFD700','10%']].map(([l,col,w])=>(
+          <div key={l} style={{textAlign:'center'}}>
+            <div style={{fontSize:9,color:col,fontWeight:800}}>{l}</div>
+            <div style={{fontSize:8,color:'#454565'}}>{w}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── PHASER UTILIZATION CHALLENGE ─────────────
+function UtilizationGame({gs,dispatch,onClose}){
+  const containerRef=useRef(null);
+  useEffect(()=>{
+    if(!window.Phaser||!containerRef.current)return;
+    const W=350,H=560;
+    class UtilScene extends Phaser.Scene{
+      constructor(){super('util');}
+      create(){
+        this.timeLeft=30;this.active=true;
+        this.cards=[
+          {name:'Chase Sapphire', bal:72,col:0x4A9EFF},
+          {name:'Capital One',    bal:58,col:0xA855F7},
+          {name:'Amex Gold',      bal:85,col:0xFFD700},
+          {name:'Discover',       bal:43,col:0x00C853},
+          {name:'Citi Double',    bal:91,col:0xE87012},
+        ];
+        this.add.rectangle(W/2,H/2,W,H,0x06060F);
+        this.add.text(W/2,26,'💳 UTILIZATION CHALLENGE',{fontSize:'16px',color:'#E87012',fontFamily:'Arial Black,Arial'}).setOrigin(0.5);
+        this.add.text(W/2,46,'Get every card under 10%!',{fontSize:'11px',color:'#6b6b8a',fontFamily:'Arial,sans-serif'}).setOrigin(0.5);
+        this.timerTxt=this.add.text(W-14,26,'30s',{fontSize:'13px',color:'#9090b0',fontFamily:'monospace'}).setOrigin(1,0.5);
+
+        const startY=90;const spacing=90;
+        this.cardObjs=this.cards.map((c,i)=>{
+          const y=startY+i*spacing;
+          // Card bg
+          const bg=this.add.graphics();
+          bg.fillStyle(c.col,0.1);bg.fillRoundedRect(14,y-22,W-28,76,10);
+          bg.lineStyle(1.5,c.col,0.5);bg.strokeRoundedRect(14,y-22,W-28,76,10);
+          // Name
+          this.add.text(26,y-10,c.name,{fontSize:'13px',color:'#'+c.col.toString(16).padStart(6,'0'),fontFamily:'Arial Black,Arial'});
+          // Bar bg
+          this.add.rectangle(26+(W-52)/2,y+22,(W-52),14,0x1E1E3A).setOrigin(0.5);
+          // Bar fill
+          const fill=this.add.rectangle(26,y+22,0,12,c.col).setOrigin(0,0.5);
+          fill.width=(W-52)*(c.bal/100);
+          // Pct text
+          const pct=this.add.text(W-26,y+22,c.bal+'%',{fontSize:'12px',color:'#'+c.col.toString(16).padStart(6,'0'),fontFamily:'monospace',fontStyle:'bold'}).setOrigin(1,0.5);
+          // 10% marker
+          const markX=26+(W-52)*0.1;
+          this.add.line(0,0,markX,y+15,markX,y+29,0x00C853).setLineWidth(1.5);
+          this.add.text(markX,y+32,'10%',{fontSize:'8px',color:'#00C853',fontFamily:'monospace'}).setOrigin(0.5);
+          // PAY button
+          const btn=this.add.text(W-26,y-10,'[PAY -5%]',{fontSize:'11px',color:'#000',backgroundColor:'#'+c.col.toString(16).padStart(6,'0'),padding:{x:8,y:4},fontFamily:'monospace'}).setOrigin(1,0.5).setInteractive({useHandCursor:true});
+          btn.on('pointerdown',()=>this.payCard(i));
+          return{fill,pct,btn,idx:i};
+        });
+
+        this.time.addEvent({delay:1000,loop:true,callback:()=>{
+          if(!this.active)return;
+          this.timeLeft--;this.timerTxt.setText(this.timeLeft+'s');
+          if(this.timeLeft<=5)this.timerTxt.setColor('#ff4040');
+          if(this.timeLeft<=0)this.endGame();
+        }});
+      }
+      payCard(i){
+        if(!this.active)return;
+        this.cards[i].bal=Math.max(0,this.cards[i].bal-5);
+        const c=this.cards[i];const obj=this.cardObjs[i];
+        obj.fill.width=Math.max(0,(W-52)*(c.bal/100));
+        obj.pct.setText(c.bal+'%');
+        obj.pct.setColor(c.bal<=10?'#00C853':'#'+c.cards);
+        if(c.bal<=10){
+          obj.pct.setColor('#00C853');obj.btn.setText('✓ DONE').setStyle({backgroundColor:'#00C853',color:'#000'});
+          const star=this.add.text(W/2,90+i*90,'✓ UNDER 10%',{fontSize:'14px',color:'#00C853',fontFamily:'Arial Black,Arial'}).setOrigin(0.5).setDepth(5);
+          this.tweens.add({targets:star,y:star.y-30,alpha:0,duration:700,onComplete:()=>star.destroy()});
+        }
+      }
+      endGame(){
+        if(!this.active)return;this.active=false;
+        const avg=this.cards.reduce((s,c)=>s+c.bal,0)/this.cards.length;
+        const under10=this.cards.filter(c=>c.bal<=10).length;
+        const scoreBoost=under10*6+Math.round((100-avg)/5);
+        this.add.rectangle(W/2,H/2,W,H,0x000000,0.82).setDepth(20);
+        const perfect=under10===5;
+        this.add.text(W/2,H/2-100,perfect?'🏆 PERFECT!':'📊 RESULTS',{fontSize:'28px',fontFamily:'Arial Black,Arial',color:perfect?'#FFD700':'#E87012'}).setOrigin(0.5).setDepth(21);
+        this.add.text(W/2,H/2-58,`${under10}/5 cards under 10%`,{fontSize:'16px',fontFamily:'monospace',color:'#9090b0'}).setOrigin(0.5).setDepth(21);
+        this.add.text(W/2,H/2-22,`Avg Utilization: ${avg.toFixed(0)}%`,{fontSize:'14px',fontFamily:'monospace',color:'#9090b0'}).setOrigin(0.5).setDepth(21);
+        this.add.text(W/2,H/2+20,`+${scoreBoost} Score Pts`,{fontSize:'22px',fontFamily:'Arial Black,Arial',color:'#00C853'}).setOrigin(0.5).setDepth(21);
+        const btn=this.add.text(W/2,H/2+85,'[ COLLECT ]',{fontSize:'20px',fontFamily:'Arial Black,Arial',color:'#000',backgroundColor:'#E87012',padding:{x:20,y:12}}).setOrigin(0.5).setDepth(21).setInteractive({useHandCursor:true});
+        btn.on('pointerdown',()=>{if(window._utilDone)window._utilDone({scoreBoost,under10,avg});});
+      }
+    }
+    const game=new Phaser.Game({type:Phaser.CANVAS,width:W,height:H,parent:containerRef.current,backgroundColor:'#06060F',scene:[UtilScene],scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH}});
+    window._utilDone=(r)=>{
+      dispatch({type:'CHANGE_SCORE',amount:Math.min(30,r.scoreBoost)});
+      dispatch({type:'ADD_XP',amount:r.under10*40+50});
+      dispatch({type:'ADD_COINS',amount:r.under10*15+10});
+      dispatch({type:'ADD_FEED',post:{avatar:gs.avatar,name:gs.playerName,text:`Crushed the Utilization Challenge — ${r.under10}/5 cards under 10%! Avg: ${r.avg.toFixed(0)}% 💳 +${r.scoreBoost} score pts`,day:gs.day,likes:Math.floor(Math.random()*120)+30,comments:Math.floor(Math.random()*12)+2}});
+      dispatch({type:'TICK_ACTION'});
+      onClose();
+    };
+    return()=>{game.destroy(true);delete window._utilDone;};
+  },[]);
+  return(
+    <div style={{position:'absolute',inset:0,background:'#06060F',zIndex:200,display:'flex',flexDirection:'column'}}>
+      <div style={{padding:'13px 18px 0',display:'flex',justifyContent:'space-between',alignItems:'center',flexShrink:0}}>
+        <div style={{fontSize:15,fontWeight:900,color:C.primary,letterSpacing:2}}>⚡ UTILIZATION CHALLENGE</div>
+        <button onClick={onClose} style={{background:'transparent',border:`1px solid ${C.border}`,borderRadius:8,color:C.sub,fontSize:13,padding:'6px 12px',cursor:'pointer'}}>✕</button>
+      </div>
+      <div ref={containerRef} style={{flex:1,display:'flex',justifyContent:'center',alignItems:'center'}}/>
+    </div>
+  );
+}
+
 function Simulator(){
   const[f,setF]=useState({pay:97,util:12,age:7,mix:3,inq:1});
   function calc(){
@@ -1230,10 +1419,16 @@ function Simulator(){
     {k:'mix',label:'🔀 Account Types',desc:`${f.mix} types`,min:0,max:5,weight:'10%'},
     {k:'inq',label:'🆕 Recent Inquiries',desc:`${f.inq} inquiries`,min:0,max:6,weight:'10%'},
   ];
+  const[showUtil,setShowUtil]=useState(false);
   return(
     <div style={{...S.screen,padding:'68px 18px 100px',animation:'fadeUp 0.3s ease'}}>
+      {showUtil&&<UtilizationGame gs={{avatar:'👻',playerName:'Ghost',day:1}} dispatch={()=>{}} onClose={()=>setShowUtil(false)}/>}
       <div style={{fontSize:24,fontWeight:900,color:C.text,marginBottom:4}}>Score Simulator</div>
-      <div style={{fontSize:14,color:C.sub,marginBottom:20}}>Drag sliders — watch your score move live</div>
+      <div style={{fontSize:14,color:C.sub,marginBottom:14}}>Drag sliders — watch your score move live</div>
+      <div style={{...S.card,marginBottom:14,padding:14}}>
+        <div style={{fontSize:11,color:C.sub,letterSpacing:3,marginBottom:10}}>3D FICO FACTOR CHART</div>
+        <FICOChart3D factors={f}/>
+      </div>
       <div style={{display:'flex',justifyContent:'center',marginBottom:20}}><ScoreRing score={score} size={200}/></div>
       {sliders.map(s=>(
         <div key={s.k} style={{...S.card,marginBottom:14}}>
@@ -1245,6 +1440,9 @@ function Simulator(){
           <input type="range" min={s.min} max={s.max} value={f[s.k]} onChange={e=>setF(x=>({...x,[s.k]:+e.target.value}))}/>
         </div>
       ))}
+      <button onClick={()=>setShowUtil(true)} style={{...S.btn(`linear-gradient(135deg,${C.green},#00a844)`),marginTop:6}}>
+        ⚡ Utilization Challenge — Phaser 2D
+      </button>
     </div>
   );
 }
