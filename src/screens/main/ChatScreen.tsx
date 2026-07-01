@@ -133,13 +133,13 @@ export default function ChatScreen({ navigation }: any) {
   useEffect(() => {
     if (typeof window !== 'undefined' && window.speechSynthesis) {
       window.speechSynthesis.getVoices();
-      window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
-    }
-    return () => {
-      if (typeof window !== 'undefined' && window.speechSynthesis) {
+      const onVoicesChanged = () => window.speechSynthesis.getVoices();
+      window.speechSynthesis.onvoiceschanged = onVoicesChanged;
+      return () => {
+        window.speechSynthesis.onvoiceschanged = null;
         window.speechSynthesis.cancel();
-      }
-    };
+      };
+    }
   }, []);
 
   // Typing dots animation
@@ -253,8 +253,11 @@ export default function ChatScreen({ navigation }: any) {
         apiMessages.unshift({ role: 'assistant', content: WELCOME_MESSAGE.content });
       }
 
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 30000);
       const res = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
+        signal: controller.signal,
         headers: {
           'Content-Type': 'application/json',
           'x-api-key': ANTHROPIC_API_KEY,
@@ -268,6 +271,7 @@ export default function ChatScreen({ navigation }: any) {
           messages: apiMessages,
         }),
       });
+      clearTimeout(timeout);
 
       if (!res.ok) throw new Error(`API ${res.status}`);
       const data = await res.json();

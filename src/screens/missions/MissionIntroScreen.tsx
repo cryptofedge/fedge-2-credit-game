@@ -88,15 +88,16 @@ export default function MissionIntroScreen({ navigation, route }: Props) {
 
   useEffect(() => {
     // Glow pulse loop
-    Animated.loop(
+    const glowLoop = Animated.loop(
       Animated.sequence([
         Animated.timing(glowPulse, { toValue: 1, duration: 1200, useNativeDriver: true }),
         Animated.timing(glowPulse, { toValue: 0.4, duration: 1200, useNativeDriver: true }),
       ])
-    ).start();
+    );
+    glowLoop.start();
 
     // Main cinematic sequence
-    Animated.sequence([
+    const mainSeq = Animated.sequence([
       // 1. Background fades in
       Animated.timing(bgOpacity, { toValue: 1, duration: 400, useNativeDriver: true }),
 
@@ -134,7 +135,13 @@ export default function MissionIntroScreen({ navigation, route }: Props) {
         Animated.spring(ctaScale, { toValue: 1, tension: 100, friction: 7, useNativeDriver: true }),
         Animated.timing(ctaOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
       ]),
-    ]).start();
+    ]);
+    mainSeq.start();
+
+    return () => {
+      glowLoop.stop();
+      mainSeq.stop();
+    };
   }, []);
 
   const launchMission = () => {

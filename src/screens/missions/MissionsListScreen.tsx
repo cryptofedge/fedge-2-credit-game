@@ -140,14 +140,17 @@ function MissionCard({
       }),
     ]).start();
 
+    let pulse: Animated.CompositeAnimation | null = null;
     if (isUnlocked && !isCompleted) {
-      Animated.loop(
+      pulse = Animated.loop(
         Animated.sequence([
           Animated.timing(pulseAnim, { toValue: 1.02, duration: 1200, useNativeDriver: true }),
           Animated.timing(pulseAnim, { toValue: 1, duration: 1200, useNativeDriver: true }),
         ])
-      ).start();
+      );
+      pulse.start();
     }
+    return () => { pulse?.stop(); };
   }, []);
 
   return (
